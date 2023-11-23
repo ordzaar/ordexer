@@ -1,0 +1,3 @@
+{
+  "extends": ["github>ordzaar/standard//renovate-config/web"]
+}

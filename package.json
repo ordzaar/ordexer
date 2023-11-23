@@ -1,0 +1,28 @@
+{
+  "name": "ordexer",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "prepare": "husky install",
+    "write": "turbo run write",
+    "clean": "turbo run clean",
+    "build": "turbo run build",
+    "build:docker": "turbo run build:docker",
+    "test": "turbo run test",
+    "dev": "turbo run dev --parallel",
+    "lint": "turbo run lint -- --fix --quiet",
+    "format": "prettier --write .",
+    "migration:deploy": "turbo run migration:deploy"
+  },
+  "devDependencies": {
+    "husky": "^8.0.3",
+    "lint-staged": "^15.1.0",
+    "semver": "^7.5.4",
+    "turbo": "^1.10.16"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=8.10.0"
+  },
+  "packageManager": "pnpm@8.10.0"
+}
