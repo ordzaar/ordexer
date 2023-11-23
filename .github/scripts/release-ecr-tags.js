@@ -16,7 +16,7 @@ module.exports = ({ context }) => {
     return getPullRequestTag(context);
   }
   throw new Error(
-    "Release Violation: Could not determine the required release tags."
+    "Release Violation: Could not determine the required release tags.",
   );
 };
 
@@ -25,7 +25,7 @@ function getReleaseTag(context) {
   const version = context.payload.release.tag_name;
   if (!semver.valid(version)) {
     throw new Error(
-      `Release Violation: Provided version '${version}' is not valid semver.`
+      `Release Violation: Provided version '${version}' is not valid semver.`,
     );
   }
   return version.replace("v", "");

@@ -35,4 +35,4 @@ Will need to have docker running as well to run the database.
 
 #### Database
 
-The database is running on Postgres 16.x and Prisma. To run it, use `pnpm start` with docker open. 
+The database is running on Postgres 16.x and Prisma. To run it, use `pnpm start` with docker open.

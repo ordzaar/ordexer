@@ -1,7 +1,7 @@
 const path = require("path");
 
 module.exports = {
-  env: {es2020: true },
+  env: { es2020: true },
   extends: [
     "eslint:recommended",
     "plugin:@typescript-eslint/recommended",
