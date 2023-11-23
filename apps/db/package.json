@@ -3,7 +3,6 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "build": "tsc -b ./tsconfig.build.json",
     "clean": "rm -rf dist",
     "seed": "npx prisma db seed",
     "start": "docker-compose rm -fsv && docker-compose -f ../../docker-compose.yml --env-file ./.env up",
