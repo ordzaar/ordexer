@@ -12,3 +12,94 @@ model Indexer {
   id    String @id @default(uuid())
   block Int
 }
+
+model OutputBlock {
+  id            String                @id @default(uuid())
+  hash          String
+  height        Int
+
+  output        Output?
+
+  @@index([height])
+}
+
+model Output {
+  id            String                @id @default(uuid())
+  block         OutputBlock           @relation(fields: [blockId], references: [id])
+  blockId       String                @unique
+  addresses     String[]
+  value         Int
+  vout          OutputTransaction
+  vin           OutputTransaction[]
+  spent         Boolean               @default(true)
+}
+
+model OutputTransaction {
+  id            String                @id @default(uuid())
+  outputVout    Output                @relation("OutputTransaction", fields: [outputVoutId], references: [id], name: "OutputTransaction_outputVoutId")
+  outputVoutId  String                @unique
+  outputVin     Output                @relation("OutputTransaction", fields: [outputVinId], references: [id], name: "OutputTransaction_outputVinId")
+  outputVinId   String
+  txid          String
+  n             Int
+
+  @@index([txid, n])
+  @@unique([txid, n])
+}
+
+model SpentOutput {
+  id            String                @id @default(uuid())
+  vout          Json
+  vin           OutputTransaction     @relation("OutputTransaction")
+}
+
+model Utxo {
+  id            String                @id @default(uuid())
+  txid          String
+  n             Int
+  sats          Int
+  address       String
+  location      String
+  satRanges     Int[]                 @default([])
+  inscriptions  Inscription[]
+}
+
+model Inscription {
+  id            String                @id @default(uuid())
+  utxo          Utxo                  @relation(fields: [utxoId], references: [id])
+  utxoId        String
+  creator       String
+  owner         String?
+  sat           Int
+  mimeType      String
+  mimeSubtype   String
+  mediaType     String
+  mediaCharset  String
+  mediaSize     Int
+  mediaContent  MediaContent?
+  timestamp     Int
+  height        Int
+  fee           Int
+  genesis       String
+  number        Int
+  outpoint      String
+  ethereum      String
+  verified      Boolean?
+
+  @@index(height)
+  @@index(number)
+  @@index(outpoint)
+  @@index(sat)
+  @@index(mimeType)
+  @@index(mimeSubtype)
+  @@index(mediaType)
+
+}
+
+model MediaContent {
+  id            String              @id @default(uuid())
+  inscription   Inscription         @relation(fields: [inscriptionId], references: [id])
+  inscriptionId String              @unique
+  content       Bytes
+
+}
