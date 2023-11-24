@@ -29,16 +29,16 @@ model Output {
   blockId       String                @unique
   addresses     String[]
   value         Int
-  vout          OutputTransaction
-  vin           OutputTransaction[]
+  vout          OutputTransaction[]   @relation("OutputTransaction_outputVoutId")
+  vin           OutputTransaction[]   @relation("OutputTransaction_outputVinId")
   spent         Boolean               @default(true)
 }
 
 model OutputTransaction {
   id            String                @id @default(uuid())
-  outputVout    Output                @relation("OutputTransaction", fields: [outputVoutId], references: [id], name: "OutputTransaction_outputVoutId")
-  outputVoutId  String                @unique
-  outputVin     Output                @relation("OutputTransaction", fields: [outputVinId], references: [id], name: "OutputTransaction_outputVinId")
+  outputVout    Output                @relation("OutputTransaction_outputVoutId", fields: [outputVoutId], references: [id])
+  outputVoutId  String
+  outputVin     Output                @relation("OutputTransaction_outputVinId", fields: [outputVinId], references: [id])
   outputVinId   String
   txid          String
   n             Int
@@ -47,11 +47,11 @@ model OutputTransaction {
   @@unique([txid, n])
 }
 
-model SpentOutput {
-  id            String                @id @default(uuid())
-  vout          Json
-  vin           OutputTransaction     @relation("OutputTransaction")
-}
+// model SpentOutput {
+//   id            String                @id @default(uuid())
+//   vout          Json
+//   vin           OutputTransaction     @relation("OutputTransaction")
+// }
 
 model Utxo {
   id            String                @id @default(uuid())
