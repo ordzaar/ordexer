@@ -13,45 +13,47 @@ model Indexer {
   block Int
 }
 
-model OutputBlock {
+model Block {
   id            String                @id @default(uuid())
   hash          String
   height        Int
 
-  output        Output?
+  // A block can have multiple transactions
+  transactions  Transaction[]
 
   @@index([height])
 }
-
-model Output {
+model Transaction {
   id            String                @id @default(uuid())
-  block         OutputBlock           @relation(fields: [blockId], references: [id])
-  blockId       String                @unique
-  addresses     String[]
-  value         Int
-  vout          OutputTransaction[]   @relation("OutputTransaction_outputVoutId")
-  vin           OutputTransaction[]   @relation("OutputTransaction_outputVinId")
-  spent         Boolean               @default(true)
-}
-
-model OutputTransaction {
-  id            String                @id @default(uuid())
-  outputVout    Output                @relation("OutputTransaction_outputVoutId", fields: [outputVoutId], references: [id])
-  outputVoutId  String
-  outputVin     Output                @relation("OutputTransaction_outputVinId", fields: [outputVinId], references: [id])
-  outputVinId   String
+  block         Block                 @relation(fields: [blockId], references: [id])
+  blockId       String
   txid          String
   n             Int
+
+  // Each transaction can have multiple inputs and outputs
+  vins          Output[]              @relation("Transaction_vinId")
+  vouts         Output[]              @relation("Transaction_voutId")
 
   @@index([txid, n])
   @@unique([txid, n])
 }
 
-// model SpentOutput {
-//   id            String                @id @default(uuid())
-//   vout          Json
-//   vin           OutputTransaction     @relation("OutputTransaction")
-// }
+model Output {
+  id            String                @id @default(uuid())
+  addresses     String[]
+  value         Int
+
+  // Each output is the output of exactly one transaction
+  vout          Transaction           @relation("Transaction_voutId", fields: [voutId], references: [id])
+  voutId        String
+  
+  // Each output can be spent by exactly one transaction
+  // vin is blank if the output is unspent
+  vin           Transaction?          @relation("Transaction_vinId", fields: [vinId], references: [id])
+  vinId         String?
+  spent         Boolean               @default(true)
+}
+
 
 model Utxo {
   id            String                @id @default(uuid())
@@ -59,8 +61,10 @@ model Utxo {
   n             Int
   sats          Int
   address       String
-  location      String
+  location      String                @unique
   satRanges     Int[]                 @default([])
+
+  // A UTXO can have multiple inscriptions
   inscriptions  Inscription[]
 }
 
@@ -100,6 +104,7 @@ model MediaContent {
   id            String              @id @default(uuid())
   inscription   Inscription         @relation(fields: [inscriptionId], references: [id])
   inscriptionId String              @unique
-  content       Bytes
 
+  // Bytestring of the media content
+  content       Bytes
 }
