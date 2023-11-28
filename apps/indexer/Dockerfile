@@ -27,7 +27,7 @@ EXPOSE 5741
 
 RUN pnpm fetch
 
-RUN pnpm install -r --offline
+RUN pnpm install
 RUN pnpm build --filter="indexer"
 
 CMD node apps/indexer/dist/main.js

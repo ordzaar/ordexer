@@ -27,7 +27,7 @@ EXPOSE 5741
 
 RUN pnpm fetch
 
-RUN pnpm install -r --offline
+RUN pnpm install
 RUN pnpm build --filter="api"
 
 CMD node apps/api/dist/main.js
