@@ -23,9 +23,7 @@ COPY .npmrc ./
 
 COPY apps ./apps
 
-EXPOSE 5741
-
-RUN pnpm fetch
+EXPOSE 5742
 
 RUN pnpm install
 RUN pnpm build --filter="api"

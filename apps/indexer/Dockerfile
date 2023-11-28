@@ -25,8 +25,6 @@ COPY apps ./apps
 
 EXPOSE 5741
 
-RUN pnpm fetch
-
 RUN pnpm install
 RUN pnpm build --filter="indexer"
 
