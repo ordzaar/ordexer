@@ -1,7 +1,7 @@
 const path = require("path");
 
 module.exports = {
-  env: { es2020: true },
+  env: { es2021: true },
   extends: [
     "eslint:recommended",
     "plugin:@typescript-eslint/recommended",
@@ -14,7 +14,15 @@ module.exports = {
       files: ["**/.eslintrc.cjs"],
       rules: {
         "@typescript-eslint/no-var-requires": "off",
+        "import/no-extraneous-dependencies": "off",
       },
     },
   ],
+  rules: {
+    "import/no-extraneous-dependencies": "off",
+    "import/prefer-default-export": "off",
+    "@typescript-eslint/no-explicit-any": "off",
+    "no-restricted-syntax": "warn",
+    "no-void": "warn",
+  },
 };

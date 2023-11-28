@@ -1,14 +1,14 @@
-import { JellyfishJSON } from '@defichain/jellyfish-json';
-import compression from '@fastify/compress';
-import helmet from '@fastify/helmet';
-import fastifyMultipart from '@fastify/multipart';
-import { NestApplicationOptions, ValidationPipe } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { NestFactory } from '@nestjs/core';
-import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
-import { Logger, LoggerErrorInterceptor } from 'nestjs-pino';
+import { JellyfishJSON } from "@defichain/jellyfish-json";
+import compression from "@fastify/compress";
+import helmet from "@fastify/helmet";
+import fastifyMultipart from "@fastify/multipart";
+import { NestApplicationOptions, ValidationPipe } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { NestFactory } from "@nestjs/core";
+import { FastifyAdapter, NestFastifyApplication } from "@nestjs/platform-fastify";
+import { Logger, LoggerErrorInterceptor } from "nestjs-pino";
 
-import { BaseModule } from './modules/BaseModule';
+import { BaseModule } from "./modules/BaseModule";
 
 /**
  * App which starts the default Ordzaar Server Application with production-ready configs
@@ -47,7 +47,7 @@ export class IndexerServerApp<App extends NestFastifyApplication = NestFastifyAp
     app.useLogger(app.get(Logger));
     await app.register(helmet);
     await app.register(fastifyMultipart);
-    await app.register(compression, { encodings: ['gzip', 'deflate'] });
+    await app.register(compression, { encodings: ["gzip", "deflate"] });
   }
 
   /**
@@ -66,12 +66,12 @@ export class IndexerServerApp<App extends NestFastifyApplication = NestFastifyAp
     const app = await this.init();
 
     const config = app.get(ConfigService);
-    const port = config.get<number>('APP_PORT', 5741);
-    const hostname = config.get<string>('APP_HOSTNAME', '0.0.0.0');
+    const port = config.get<number>("APP_PORT", 5741);
+    const hostname = config.get<string>("APP_HOSTNAME", "0.0.0.0");
     await app.listen(port, hostname);
     // logger on server started
     const logger = app.get<Logger>(Logger);
-    const serverVersion = app.get<ConfigService>(ConfigService).getOrThrow('APP_VERSION');
+    const serverVersion = app.get<ConfigService>(ConfigService).getOrThrow("APP_VERSION");
     logger.log(`======================= INDEXER SERVER STARTED (v${serverVersion}) =======================`);
 
     return app;

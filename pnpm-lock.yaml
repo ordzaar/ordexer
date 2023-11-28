@@ -21,41 +21,7 @@ importers:
         specifier: ^1.10.16
         version: 1.10.16
 
-  apps/db:
-    dependencies:
-      '@prisma/client':
-        specifier: ^5.6.0
-        version: 5.6.0(prisma@5.6.0)
-      pg:
-        specifier: ^8.11.3
-        version: 8.11.3
-      uuid:
-        specifier: ^9.0.1
-        version: 9.0.1
-    devDependencies:
-      '@ordzaar/standard-linter':
-        specifier: ^0.4.4
-        version: 0.4.4(eslint-plugin-import@2.29.0)(typescript@5.2.2)
-      '@ordzaar/standard-prettier':
-        specifier: ^0.4.4
-        version: 0.4.4(@typescript-eslint/eslint-plugin@6.13.0)(@typescript-eslint/parser@6.13.0)(eslint-plugin-import@2.29.0)(eslint-plugin-jsx-a11y@6.8.0)(eslint-plugin-react-hooks@4.6.0)(eslint-plugin-react@7.33.2)(typescript@5.2.2)
-      '@ordzaar/standard-typescript':
-        specifier: ^0.4.4
-        version: 0.4.4(typescript@5.2.2)
-      '@stickyjs/testcontainers':
-        specifier: ^1.3.4
-        version: 1.3.4
-      prisma:
-        specifier: ^5.6.0
-        version: 5.6.0
-      prisma-erd-generator:
-        specifier: ^1.11.1
-        version: 1.11.1(@prisma/client@5.6.0)(typescript@5.2.2)
-      testcontainers:
-        specifier: ^10.3.2
-        version: 10.3.2(encoding@0.1.13)
-
-  apps/indexer:
+  apps/api:
     dependencies:
       '@defichain/jellyfish-json':
         specifier: ^4.0.1
@@ -69,6 +35,9 @@ importers:
       '@nestjs/axios':
         specifier: ^3.0.1
         version: 3.0.1(@nestjs/common@10.2.10)(axios@1.6.2)(reflect-metadata@0.1.13)(rxjs@7.8.1)
+      '@ordzaar/ordexer-db':
+        specifier: '*'
+        version: link:../../packages/db
       '@ordzaar/standard-api-fastify':
         specifier: ^0.4.4
         version: 0.4.4(@prisma/client@5.6.0)(axios@1.6.2)(class-transformer@0.5.1)(class-validator@0.14.0)(encoding@0.1.13)(pino-http@8.5.1)(reflect-metadata@0.1.13)(rxjs@7.8.1)(typescript@5.2.2)
@@ -133,9 +102,6 @@ importers:
       '@ordzaar/standard-typescript':
         specifier: ^0.4.4
         version: 0.4.4(typescript@5.2.2)
-      '@stickyjs/turbo-jest':
-        specifier: ^1.3.4
-        version: 1.3.4(@babel/core@7.23.3)(@types/node@20.10.0)(ts-node@10.9.1)(turbo@1.10.16)(typanion@3.14.0)(typescript@5.2.2)
       '@types/express':
         specifier: ^4.17.21
         version: 4.17.21
@@ -175,6 +141,161 @@ importers:
       tsconfig-paths:
         specifier: ^4.2.0
         version: 4.2.0
+
+  apps/indexer:
+    dependencies:
+      '@defichain/jellyfish-json':
+        specifier: ^4.0.1
+        version: 4.0.1(defichain@4.0.1)
+      '@fastify/multipart':
+        specifier: ^8.0.0
+        version: 8.0.0
+      '@logtail/pino':
+        specifier: ^0.4.17
+        version: 0.4.17(encoding@0.1.13)(pino@8.16.2)
+      '@nestjs/axios':
+        specifier: ^3.0.1
+        version: 3.0.1(@nestjs/common@10.2.10)(axios@1.6.2)(reflect-metadata@0.1.13)(rxjs@7.8.1)
+      '@ordzaar/ordexer-db':
+        specifier: '*'
+        version: link:../../packages/db
+      '@ordzaar/standard-api-fastify':
+        specifier: ^0.4.4
+        version: 0.4.4(@prisma/client@5.6.0)(axios@1.6.2)(class-transformer@0.5.1)(class-validator@0.14.0)(encoding@0.1.13)(pino-http@8.5.1)(reflect-metadata@0.1.13)(rxjs@7.8.1)(typescript@5.2.2)
+      '@prisma/client':
+        specifier: ^5.6.0
+        version: 5.6.0(prisma@5.6.0)
+      '@types/uuid':
+        specifier: ^9.0.7
+        version: 9.0.7
+      axios:
+        specifier: ^1.6.2
+        version: 1.6.2
+      bignumber.js:
+        specifier: ^9.1.2
+        version: 9.1.2
+      bitcoin-address-validation:
+        specifier: ^2.2.3
+        version: 2.2.3
+      bitcoinjs-lib:
+        specifier: ^6.1.5
+        version: 6.1.5
+      bs58:
+        specifier: ^5.0.0
+        version: 5.0.0
+      bufferutil:
+        specifier: ^4.0.8
+        version: 4.0.8
+      class-transformer:
+        specifier: ^0.5.1
+        version: 0.5.1
+      class-validator:
+        specifier: ^0.14.0
+        version: 0.14.0
+      dayjs:
+        specifier: ^1.11.10
+        version: 1.11.10
+      encoding:
+        specifier: ^0.1.13
+        version: 0.1.13
+      form-data:
+        specifier: ^4.0.0
+        version: 4.0.0
+      joi:
+        specifier: ^17.11.0
+        version: 17.11.0
+      pg:
+        specifier: ^8.11.3
+        version: 8.11.3
+      shuffle-seed:
+        specifier: ^1.1.6
+        version: 1.1.6
+      utf-8-validate:
+        specifier: ^6.0.3
+        version: 6.0.3
+      uuid:
+        specifier: ^9.0.1
+        version: 9.0.1
+    devDependencies:
+      '@ordzaar/standard-prettier':
+        specifier: ^0.4.4
+        version: 0.4.4(@typescript-eslint/eslint-plugin@6.13.0)(@typescript-eslint/parser@6.13.0)(eslint-plugin-import@2.29.0)(eslint-plugin-jsx-a11y@6.8.0)(eslint-plugin-react-hooks@4.6.0)(eslint-plugin-react@7.33.2)(typescript@5.2.2)
+      '@ordzaar/standard-typescript':
+        specifier: ^0.4.4
+        version: 0.4.4(typescript@5.2.2)
+      '@types/express':
+        specifier: ^4.17.21
+        version: 4.17.21
+      '@types/multer':
+        specifier: ^1.4.11
+        version: 1.4.11
+      '@types/node':
+        specifier: ^20.10.0
+        version: 20.10.0
+      '@types/supertest':
+        specifier: ^2.0.16
+        version: 2.0.16
+      light-my-request:
+        specifier: 5.11.0
+        version: 5.11.0
+      prisma:
+        specifier: ^5.6.0
+        version: 5.6.0
+      source-map-support:
+        specifier: ^0.5.21
+        version: 0.5.21
+      supertest:
+        specifier: ^6.3.3
+        version: 6.3.3
+      testcontainers:
+        specifier: ^10.3.2
+        version: 10.3.2(encoding@0.1.13)
+      ts-jest:
+        specifier: ^29.1.1
+        version: 29.1.1(@babel/core@7.23.3)(jest@29.7.0)(typescript@5.2.2)
+      ts-loader:
+        specifier: ^9.5.1
+        version: 9.5.1(typescript@5.2.2)(webpack@5.89.0)
+      ts-node:
+        specifier: ^10.9.1
+        version: 10.9.1(@swc/core@1.3.99)(@types/node@20.10.0)(typescript@5.2.2)
+      tsconfig-paths:
+        specifier: ^4.2.0
+        version: 4.2.0
+
+  packages/db:
+    dependencies:
+      '@prisma/client':
+        specifier: ^5.6.0
+        version: 5.6.0(prisma@5.6.0)
+      pg:
+        specifier: ^8.11.3
+        version: 8.11.3
+      uuid:
+        specifier: ^9.0.1
+        version: 9.0.1
+    devDependencies:
+      '@ordzaar/standard-linter':
+        specifier: ^0.4.4
+        version: 0.4.4(eslint-plugin-import@2.29.0)(typescript@5.2.2)
+      '@ordzaar/standard-prettier':
+        specifier: ^0.4.4
+        version: 0.4.4(@typescript-eslint/eslint-plugin@6.13.0)(@typescript-eslint/parser@6.13.0)(eslint-plugin-import@2.29.0)(eslint-plugin-jsx-a11y@6.8.0)(eslint-plugin-react-hooks@4.6.0)(eslint-plugin-react@7.33.2)(typescript@5.2.2)
+      '@ordzaar/standard-typescript':
+        specifier: ^0.4.4
+        version: 0.4.4(typescript@5.2.2)
+      '@stickyjs/testcontainers':
+        specifier: ^1.3.4
+        version: 1.3.4
+      prisma:
+        specifier: ^5.6.0
+        version: 5.6.0
+      prisma-erd-generator:
+        specifier: ^1.11.1
+        version: 1.11.1(@prisma/client@5.6.0)(typescript@5.2.2)
+      testcontainers:
+        specifier: ^10.3.2
+        version: 10.3.2(encoding@0.1.13)
 
 packages:
 
@@ -2782,27 +2903,6 @@ packages:
       '@sinonjs/commons': 3.0.0
     dev: true
 
-  /@stickyjs/jest@1.3.4(@babel/core@7.23.3)(@types/node@20.10.0)(ts-node@10.9.1)(typescript@5.2.2):
-    resolution: {integrity: sha512-ps0IBJCMvtRbwEMqBARwmqjqMtsCkD4AWtXgWnmtQAR+cFDxKqnVHZQWAVplm25cZ+I/rgjPmRl4ImXtHgfRPA==}
-    dependencies:
-      '@types/jest': 29.5.10
-      jest: 29.7.0(@types/node@20.10.0)(ts-node@10.9.1)
-      jest-extended: 4.0.1(jest@29.7.0)
-      ts-jest: 29.1.1(@babel/core@7.23.3)(jest@29.7.0)(typescript@5.2.2)
-      wait-for-expect: 3.0.2
-    transitivePeerDependencies:
-      - '@babel/core'
-      - '@jest/types'
-      - '@types/node'
-      - babel-jest
-      - babel-plugin-macros
-      - esbuild
-      - node-notifier
-      - supports-color
-      - ts-node
-      - typescript
-    dev: true
-
   /@stickyjs/testcontainers@1.3.4:
     resolution: {integrity: sha512-aI+L8CBVtTggprRYNYBgtrD1EbeezO6Z7hsM8UqOxrcbVomxEHF6eZMqxEecjDYR9wF7FZqoit3z/fpJsi8WJw==}
     dependencies:
@@ -2810,38 +2910,6 @@ packages:
     transitivePeerDependencies:
       - encoding
       - supports-color
-    dev: true
-
-  /@stickyjs/turbo-jest@1.3.4(@babel/core@7.23.3)(@types/node@20.10.0)(ts-node@10.9.1)(turbo@1.10.16)(typanion@3.14.0)(typescript@5.2.2):
-    resolution: {integrity: sha512-f6mzksXE18A+R8qyMLhND5XvWaMH0QyxFPOi1YFj1aiVACyMyRjyUZHSflfEiRjQyXEZfKlwI6UuzTtxI2rIdw==}
-    dependencies:
-      '@stickyjs/jest': 1.3.4(@babel/core@7.23.3)(@types/node@20.10.0)(ts-node@10.9.1)(typescript@5.2.2)
-      '@stickyjs/turbo': 1.3.4(turbo@1.10.16)(typanion@3.14.0)
-    transitivePeerDependencies:
-      - '@babel/core'
-      - '@jest/types'
-      - '@types/node'
-      - babel-jest
-      - babel-plugin-macros
-      - esbuild
-      - node-notifier
-      - supports-color
-      - ts-node
-      - turbo
-      - typanion
-      - typescript
-    dev: true
-
-  /@stickyjs/turbo@1.3.4(turbo@1.10.16)(typanion@3.14.0):
-    resolution: {integrity: sha512-9S9emyhcr8vMQp8BxMgj6no5i2A0i9SNRIxQ+0VP5jLsojNYf49iLykKvs/cfbIrNA6ye6AfUTZBNt7Iwq8VaA==}
-    hasBin: true
-    peerDependencies:
-      turbo: '*'
-    dependencies:
-      clipanion: 3.2.1(typanion@3.14.0)
-      turbo: 1.10.16
-    transitivePeerDependencies:
-      - typanion
     dev: true
 
   /@swc/cli@0.1.63(@swc/core@1.3.99):
@@ -3159,13 +3227,6 @@ packages:
     resolution: {integrity: sha512-pk2B1NWalF9toCRu6gjBzR69syFjP4Od8WRAX+0mmf9lAjCRicLOWc+ZrxZHx/0XRjotgkF9t6iaMJ+aXcOdZQ==}
     dependencies:
       '@types/istanbul-lib-report': 3.0.3
-    dev: true
-
-  /@types/jest@29.5.10:
-    resolution: {integrity: sha512-tE4yxKEphEyxj9s4inideLHktW/x6DwesIwWZ9NN1FKf9zbJYsnhBoA9vrHA/IuIOKwPa5PcFBNV4lpMIOEzyQ==}
-    dependencies:
-      expect: 29.7.0
-      pretty-format: 29.7.0
     dev: true
 
   /@types/json-schema@7.0.15:
@@ -4628,14 +4689,6 @@ packages:
     resolution: {integrity: sha512-FxqpkPPwu1HjuN93Omfm4h8uIanXofW0RxVEW3k5RKx+mJJYSthzNhp32Kzxxy3YAEZ/Dc/EWN1vZRY0+kOhbw==}
     engines: {node: '>= 10'}
     dev: false
-
-  /clipanion@3.2.1(typanion@3.14.0):
-    resolution: {integrity: sha512-dYFdjLb7y1ajfxQopN05mylEpK9ZX0sO1/RfMXdfmwjlIsPkbh4p7A682x++zFPLDCo1x3p82dtljHf5cW2LKA==}
-    peerDependencies:
-      typanion: '*'
-    dependencies:
-      typanion: 3.14.0
-    dev: true
 
   /cliui@8.0.1:
     resolution: {integrity: sha512-BSeNnyus75C4//NQ9gQt1/csTXyo/8Sb+afLAkzAptFuMsod9HFokGNudZpi/oQV73hnVK+sR+5PVRMd+Dr7YQ==}
@@ -7437,20 +7490,6 @@ packages:
       '@types/node': 20.10.0
       jest-mock: 29.7.0
       jest-util: 29.7.0
-    dev: true
-
-  /jest-extended@4.0.1(jest@29.7.0):
-    resolution: {integrity: sha512-KM6dwuBUAgy6QONuR19CGubZB9Hkjqvl/d5Yc/FXsdB8+gsGxB2VQ+NEdOrr95J4GMPeLnDoPOKyi6+mKCCnZQ==}
-    engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
-    peerDependencies:
-      jest: '>=27.2.5'
-    peerDependenciesMeta:
-      jest:
-        optional: true
-    dependencies:
-      jest: 29.7.0(@types/node@20.10.0)(ts-node@10.9.1)
-      jest-diff: 29.7.0
-      jest-get-type: 29.6.3
     dev: true
 
   /jest-get-type@29.6.3:
@@ -10645,10 +10684,6 @@ packages:
     resolution: {integrity: sha512-KXXFFdAbFXY4geFIwoyNK+f5Z1b7swfXABfL7HXCmoIWMKU3dmS26672A4EeQtDzLKy7SXmfBu51JolvEKwtGA==}
     dev: true
 
-  /typanion@3.14.0:
-    resolution: {integrity: sha512-ZW/lVMRabETuYCd9O9ZvMhAh8GslSqaUjxmK/JLPCh6l73CvLBiuXswj/+7LdnWOgYsQ130FqLzFz5aGT4I3Ug==}
-    dev: true
-
   /type-check@0.3.2:
     resolution: {integrity: sha512-ZCmOJdvOWDBYJlzAoFkC+Q0+bUyEOS1ltgp1MGU03fqHG+dbi9tBFU2Rd9QKiDZFAYrhPh2JUf7rZRIuHRKtOg==}
     engines: {node: '>= 0.8.0'}
@@ -10921,10 +10956,6 @@ packages:
       moment: 2.29.4
       propagating-hammerjs: 1.5.0
     dev: false
-
-  /wait-for-expect@3.0.2:
-    resolution: {integrity: sha512-cfS1+DZxuav1aBYbaO/kE06EOS8yRw7qOFoD3XtjTkYvCvh3zUvNST8DXK/nPaeqIzIv3P3kL3lRJn8iwOiSag==}
-    dev: true
 
   /walker@1.0.8:
     resolution: {integrity: sha512-ts/8E8l5b7kY0vlWLewOkDXMmPdLcVV4GmOQLyxuSswIJsweeFZtAsMF7k1Nszz+TYBQrlYRmzOnr398y1JemQ==}

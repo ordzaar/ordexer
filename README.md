@@ -10,10 +10,15 @@ In this workspace, you can refer to [pnpm-workspace.yaml](pnpm-workspace.yaml) o
 
 ```txt
 apps/
-├─ db/
 ├─ indexer/
-|- api/
+├─ api/
+packages/
+├─ db
 ```
+
+## Indexer and API
+
+Indexer and API are both Nest.js packages. Both will be using the same setup and structure. They will also share the same database via `packages/database` directory.
 
 ### Developing & Contributing
 
