@@ -13,82 +13,66 @@ model Indexer {
   block Int
 }
 
-model Block {
-  id            String                @id @default(uuid())
-  hash          String
-  height        Int
-
-  // A block can have multiple transactions
-  transactions  Transaction[]
-
-  @@index([height])
-}
-model Transaction {
-  id            String                @id @default(uuid())
-  block         Block                 @relation(fields: [blockId], references: [id])
-  blockId       String
-  txid          String
-  n             Int
-
-  // Each transaction can have multiple inputs and outputs
-  vins          Output[]              @relation("Transaction_vinId")
-  vouts         Output[]              @relation("Transaction_voutId")
-
-  @@index([txid, n])
-  @@unique([txid, n])
-}
-
 model Output {
-  id            String                @id @default(uuid())
-  addresses     String[]
-  value         Int
+  id                String                @id @default(uuid())
+  addresses         String[]
+  value             Int
 
   // Each output is the output of exactly one transaction
-  vout          Transaction           @relation("Transaction_voutId", fields: [voutId], references: [id])
-  voutId        String
+  voutBlockHash     String
+  voutBlockHeight   Int
+  voutTxid          String
+  voutTxN           Int
   
   // Each output can be spent by exactly one transaction
   // vin is blank if the output is unspent
-  vin           Transaction?          @relation("Transaction_vinId", fields: [vinId], references: [id])
-  vinId         String?
-  spent         Boolean               @default(true)
+  vinBlockHash      String?
+  vinBlockHeight    Int?
+  vinTxid           String?
+  vinTxN            Int?
+  
+  spent             Boolean               @default(true)
+
+  @@index([voutBlockHeight])
+  @@unique([voutTxid, voutTxN])
 }
 
 
 model Utxo {
-  id            String                @id @default(uuid())
-  txid          String
-  n             Int
-  sats          Int
-  address       String
-  location      String                @unique
-  satRanges     Int[]                 @default([])
+  id                String                @id @default(uuid())
+  txid              String
+  n                 Int
+  sats              Int
+  address           String
+  location          String                @unique
+  satRanges         Int[]                 @default([])
 
   // A UTXO can have multiple inscriptions
   inscriptions  Inscription[]
 }
 
 model Inscription {
-  id            String                @id @default(uuid())
-  utxo          Utxo                  @relation(fields: [utxoId], references: [id])
-  utxoId        String
-  creator       String
-  owner         String?
-  sat           Int
-  mimeType      String
-  mimeSubtype   String
-  mediaType     String
-  mediaCharset  String
-  mediaSize     Int
-  mediaContent  MediaContent?
-  timestamp     Int
-  height        Int
-  fee           Int
-  genesis       String
-  number        Int
-  outpoint      String
-  ethereum      String
-  verified      Boolean?
+  id                String                @id @default(uuid())
+  utxo              Utxo                  @relation(fields: [utxoId], references: [id])
+  utxoId            String
+  creator           String
+  owner             String?
+  sat               Int
+  mimeType          String
+  mimeSubtype       String
+  mediaType         String
+  mediaCharset      String
+  mediaSize         Int
+  // Media Content is split into a separate table keep Inscription table small
+  mediaContent      MediaContent?
+  timestamp         Int
+  height            Int
+  fee               Int
+  genesis           String
+  number            Int
+  outpoint          String
+  ethereum          String
+  verified          Boolean?
 
   @@index(height)
   @@index(number)
@@ -101,10 +85,10 @@ model Inscription {
 }
 
 model MediaContent {
-  id            String              @id @default(uuid())
-  inscription   Inscription         @relation(fields: [inscriptionId], references: [id])
-  inscriptionId String              @unique
+  id                String              @id @default(uuid())
+  inscription       Inscription         @relation(fields: [inscriptionId], references: [id])
+  inscriptionId     String              @unique
 
   // Bytestring of the media content
-  content       Bytes
+  content           Bytes
 }
