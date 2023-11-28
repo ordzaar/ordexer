@@ -22,26 +22,27 @@ model Output {
   voutBlockHash     String
   voutBlockHeight   Int
   voutTxid          String
-  voutTxN           Int
+  voutTxIndex       Int
   
   // Each output can be spent by exactly one transaction
   // vin is blank if the output is unspent
   vinBlockHash      String?
   vinBlockHeight    Int?
   vinTxid           String?
-  vinTxN            Int?
+  vinTxIndex        Int?
   
   spent             Boolean               @default(true)
 
   @@index([voutBlockHeight])
-  @@unique([voutTxid, voutTxN])
+  @@unique([voutTxid, voutTxIndex])
+  @@unique([vinTxid, vinTxIndex])
 }
 
 
 model Utxo {
   id                String                @id @default(uuid())
   txid              String
-  n                 Int
+  index             Int
   sats              Int
   address           String
   location          String                @unique
@@ -49,6 +50,8 @@ model Utxo {
 
   // A UTXO can have multiple inscriptions
   inscriptions  Inscription[]
+
+  @@unique([txid, index])
 }
 
 model Inscription {
