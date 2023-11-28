@@ -12,3 +12,86 @@ model Indexer {
   id    String @id @default(uuid())
   block Int
 }
+
+model Output {
+  id                String                @id @default(uuid())
+  addresses         String[]
+  value             Int
+
+  // Each output is the output of exactly one transaction
+  voutBlockHash     String
+  voutBlockHeight   Int
+  voutTxid          String
+  voutTxIndex       Int
+  
+  // Each output can be spent by exactly one transaction
+  // vin is blank if the output is unspent
+  vinBlockHash      String?
+  vinBlockHeight    Int?
+  vinTxid           String?
+  vinTxIndex        Int?
+  
+  spent             Boolean               @default(true)
+
+  @@index([voutBlockHeight])
+  @@unique([voutTxid, voutTxIndex])
+  @@unique([vinTxid, vinTxIndex])
+}
+
+
+model Utxo {
+  id                String                @id @default(uuid())
+  txid              String
+  index             Int
+  sats              Int
+  address           String
+  location          String                @unique
+  satRanges         Int[]                 @default([])
+
+  // A UTXO can have multiple inscriptions
+  inscriptions  Inscription[]
+
+  @@unique([txid, index])
+}
+
+model Inscription {
+  id                String                @id @default(uuid())
+  utxo              Utxo                  @relation(fields: [utxoId], references: [id])
+  utxoId            String
+  creator           String
+  owner             String?
+  sat               Int
+  mimeType          String
+  mimeSubtype       String
+  mediaType         String
+  mediaCharset      String
+  mediaSize         Int
+  // Media Content is split into a separate table keep Inscription table small
+  mediaContent      MediaContent?
+  timestamp         Int
+  height            Int
+  fee               Int
+  genesis           String
+  number            Int
+  outpoint          String
+  ethereum          String
+  verified          Boolean?
+
+  @@index(height)
+  @@index(number)
+  @@index(outpoint)
+  @@index(sat)
+  @@index(mimeType)
+  @@index(mimeSubtype)
+  @@index(mediaType)
+
+}
+
+model MediaContent {
+  id                String              @id @default(uuid())
+  inscription       Inscription         @relation(fields: [inscriptionId], references: [id])
+  inscriptionId     String              @unique
+
+  // Bytestring of the media content
+  content           Bytes
+}
