@@ -52,8 +52,8 @@ importers:
         specifier: ^1.11.1
         version: 1.11.1(@prisma/client@5.6.0)(typescript@5.2.2)
       testcontainers:
-        specifier: ^10.2.2
-        version: 10.2.2
+        specifier: ^10.3.2
+        version: 10.3.2
 
 packages:
 
@@ -3469,10 +3469,11 @@ packages:
       streamx: 2.15.5
     dev: true
 
-  /testcontainers@10.2.2:
-    resolution: {integrity: sha512-5GZ93rtoVXMx/s3xZjydftrKLnv1Yf+ETzGkXYRCm16LB60W48SGodxuiouYvNlVy0y0ogoQhdOw3DqsPActEA==}
+  /testcontainers@10.3.2:
+    resolution: {integrity: sha512-IsV6NgS5reHcVF1nJLCDJv1hM9gAWUhLwh9b3ybgzvM3X7T2dcmuLFKt1RAR8qN8k+44tW2Drj7idxW6oeGvvg==}
     dependencies:
       '@balena/dockerignore': 1.0.2
+      '@types/dockerode': 3.3.23
       archiver: 5.3.2
       async-lock: 1.4.0
       byline: 5.0.0
