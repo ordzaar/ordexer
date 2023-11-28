@@ -22,10 +22,13 @@ COPY turbo.json ./
 COPY .npmrc ./
 
 COPY apps ./apps
+COPY packages ./packages
 
 EXPOSE 5742
 
-RUN pnpm install
+RUN pnpm fetch
+
+RUN pnpm install -r --offline
 RUN pnpm build --filter="api"
 
 CMD node apps/api/dist/main.js

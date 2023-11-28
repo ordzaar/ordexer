@@ -22,10 +22,13 @@ COPY turbo.json ./
 COPY .npmrc ./
 
 COPY apps ./apps
+COPY packages ./packages
 
 EXPOSE 5741
 
-RUN pnpm install
+RUN pnpm fetch
+
+RUN pnpm install -r --offline
 RUN pnpm build --filter="indexer"
 
 CMD node apps/indexer/dist/main.js
