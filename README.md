@@ -18,7 +18,7 @@ packages/
 
 ## Indexer and API
 
-Indexer and API are both Nest.js packages. Both will be using the same setup and structure. They will also share the same database via `packages/database` directory.
+Indexer and API are both Nest.js packages. Both will be using the same setup and structure. They will also share the same database via `packages/db` directory.
 
 ### Developing & Contributing
 
