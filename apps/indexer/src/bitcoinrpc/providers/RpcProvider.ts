@@ -51,6 +51,10 @@ export class RpcProvider {
     return this.rpc<string>("getblockhash", [height]);
   }
 
+  async getBestBlockHash(): Promise<string> {
+    return this.rpc<string>("getbestblockhash");
+  }
+
   async getRawTransaction(txid: string, verbose?: false): Promise<string>;
   async getRawTransaction(txid: string, verbose: true): Promise<RawTransaction>;
   async getRawTransaction(txid: string, verbose = false): Promise<string | RawTransaction> {
