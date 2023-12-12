@@ -9,10 +9,9 @@ export class InscriptionHandler extends BaseIndexerHandler {
 
   async commit(vins: VinData[], vouts: VoutData[]): Promise<void> {
     this.logger.log("commiting insription");
-    return;
   }
 
   async reorg(fromHeight: number): Promise<void> {
-    return;
+    this.logger.log(`reorging insription from height ${fromHeight}`);
   }
 }
