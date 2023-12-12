@@ -1,0 +1,164 @@
+import { Injectable, Logger } from "@nestjs/common";
+import { Block, BitcoinService, ScriptPubKey } from "src/bitcoin/BitcoinService";
+import { isCoinbaseTx } from "src/utils/Bitcoin";
+import { BaseIndexerHandler } from "./handlers/BaseHandler";
+import { InscriptionHandler } from "./handlers/InscriptionsHandler";
+import { OutputHandler } from "./handlers/OutputHandler";
+
+@Injectable()
+export class IndexerService {
+  private readonly logger = new Logger(IndexerService.name);
+
+  private vins: VinData[] = [];
+  private vouts: VoutData[] = [];
+
+  private handlers: BaseIndexerHandler[] = [];
+
+  constructor(
+    private bitcoinSvc: BitcoinService,
+    private inscriptionHdl: InscriptionHandler,
+    private outputHndl: OutputHandler,
+  ) {
+    this.registerHandlers();
+  }
+
+  private async registerHandlers() {
+    this.handlers.push(this.outputHndl, this.inscriptionHdl);
+  }
+
+  async index(fromBlock: number, toBlock: number, options: IndexOptions) {
+    this.logger.log(`indexing from block ${fromBlock} to ${toBlock}`);
+
+    let blockHeight = fromBlock;
+
+    let blockhash = await this.bitcoinSvc.getBlockHash(fromBlock);
+
+    while (blockhash != undefined && blockHeight <= toBlock) {
+      this.logger.log(`reading block ${blockHeight} from node`);
+      const block = await this.bitcoinSvc.getBlock(blockhash, 2);
+
+      // ### Block
+      // Process the block and extract all the vin and vout information required
+      // by subsequent index handlers.
+      await this.handleBlock(block);
+
+      // ### Commit
+      // Once we reach configured tresholds we commit the current vins and vouts
+      // to the registered index handlers.
+      if (this.hasReachedTreshold(blockHeight, options)) {
+        await this.commitVinVout(blockHeight - 1);
+      }
+
+      blockHeight += 1;
+      blockhash = block.nextblockhash;
+    }
+
+    await this.commitVinVout(blockHeight - 1);
+  }
+
+  private hasReachedTreshold(blockheight: number, options: IndexOptions) {
+    if (blockheight !== 0 && blockheight % options.threshold.numBlocks === 0) {
+      return true;
+    }
+    if (this.vins.length > options.threshold.numVins) {
+      return true;
+    }
+    if (this.vouts.length > options.threshold.numVouts) {
+      return true;
+    }
+    return false;
+  }
+
+  private async handleBlock(block: Block<2>) {
+    for (const tx of block.tx) {
+      const txid = tx.txid;
+
+      if (isCoinbaseTx(tx) === false) {
+        let n = 0;
+        for (const vin of tx.vin) {
+          this.vins.push({
+            txid,
+            n,
+            witness: vin.txinwitness ?? [],
+            block: {
+              hash: block.hash,
+              height: block.height,
+              time: block.time,
+            },
+            vout: {
+              txid: vin.txid,
+              n: vin.vout,
+            },
+          });
+          n += 1;
+        }
+      }
+
+      let n = 0;
+      for (const vout of tx.vout) {
+        this.vouts.push({
+          txid,
+          n,
+          addresses: await this.bitcoinSvc.getAddressessFromVout(vout),
+          value: vout.value,
+          scriptPubKey: vout.scriptPubKey,
+          block: {
+            hash: block.hash,
+            height: block.height,
+            time: block.time,
+          },
+        });
+        n += 1;
+      }
+    }
+  }
+
+  private async commitVinVout(lastBlockHeight: number) {
+    this.logger.log(`commiting block: ${lastBlockHeight}`);
+
+    for (const handler of this.handlers) {
+      // this.logger.log(`commiting ${handler.name}`);
+      await handler.commit(this.vins, this.vouts);
+    }
+
+    this.vins = [];
+    this.vouts = [];
+
+    // todo save the lastblock height into db
+  }
+
+  // TODO
+  private performReorg() { }
+}
+
+export type IndexOptions = {
+  threshold: {
+    numBlocks: number;
+    numVins: number;
+    numVouts: number;
+  };
+};
+
+export type VinData = TxMeta & {
+  witness: string[];
+  block: BlockMeta;
+  vout: TxMeta;
+};
+
+export type VoutData = TxMeta & {
+  addresses: string[];
+  value: number;
+  scriptPubKey: ScriptPubKey;
+  block: BlockMeta;
+};
+
+type TxMeta = {
+  txid: string;
+  n: number;
+};
+
+type BlockMeta = {
+  hash: string;
+  height: number;
+  time: number;
+};

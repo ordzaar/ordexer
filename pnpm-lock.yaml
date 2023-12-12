@@ -156,6 +156,9 @@ importers:
       '@nestjs/axios':
         specifier: ^3.0.1
         version: 3.0.1(@nestjs/common@10.2.10)(axios@1.6.2)(reflect-metadata@0.1.13)(rxjs@7.8.1)
+      '@nestjs/schedule':
+        specifier: ^4.0.0
+        version: 4.0.0(@nestjs/common@10.2.10)(@nestjs/core@10.2.10)(reflect-metadata@0.1.13)
       '@ordzaar/ordexer-db':
         specifier: workspace:*
         version: link:../../packages/db
@@ -2499,6 +2502,20 @@ packages:
       - supports-color
     dev: false
 
+  /@nestjs/schedule@4.0.0(@nestjs/common@10.2.10)(@nestjs/core@10.2.10)(reflect-metadata@0.1.13):
+    resolution: {integrity: sha512-zz4h54m/F/1qyQKvMJCRphmuwGqJltDAkFxUXCVqJBXEs5kbPt93Pza3heCQOcMH22MZNhGlc9DmDMLXVHmgVQ==}
+    peerDependencies:
+      '@nestjs/common': ^8.0.0 || ^9.0.0 || ^10.0.0
+      '@nestjs/core': ^8.0.0 || ^9.0.0 || ^10.0.0
+      reflect-metadata: ^0.1.12
+    dependencies:
+      '@nestjs/common': 10.2.10(class-transformer@0.5.1)(class-validator@0.14.0)(reflect-metadata@0.1.13)(rxjs@7.8.1)
+      '@nestjs/core': 10.2.10(@nestjs/common@10.2.10)(encoding@0.1.13)(reflect-metadata@0.1.13)(rxjs@7.8.1)
+      cron: 3.1.3
+      reflect-metadata: 0.1.13
+      uuid: 9.0.1
+    dev: false
+
   /@nestjs/schematics@10.0.3(chokidar@3.5.3)(typescript@5.2.2):
     resolution: {integrity: sha512-2BRujK0GqGQ7j1Zpz+obVfskDnnOeVKt5aXoSaVngKo8Oczy8uYCY+R547TQB+Kf35epdfFER2pVnQrX3/It5A==}
     peerDependencies:
@@ -3250,6 +3267,10 @@ packages:
 
   /@types/lossless-json@1.0.4:
     resolution: {integrity: sha512-eHhzo0p2p9On3cTr5X0Q0XsOjJxkqYzQi5Le5ObSiJjnLlGpDQvTcQEXknCkvKOFLBLa8ny4dgJKr0ADRV8yig==}
+    dev: false
+
+  /@types/luxon@3.3.7:
+    resolution: {integrity: sha512-gKc9P2d4g5uYwmy4s/MO/yOVPmvHyvzka1YH6i5dM03UrFofHSmgc0D0ymbDRStFWHusk6cwwF6nhLm/ckBbbQ==}
     dev: false
 
   /@types/mime@1.3.5:
@@ -4957,6 +4978,13 @@ packages:
   /create-require@1.1.1:
     resolution: {integrity: sha512-dcKFX3jn0MpIaXjisoRvexIJVEKzaq7z2rZKxf+MSr9TkdmHmsU4m2lcLojrj/FHl8mk5VxMmYA+ftRkP/3oKQ==}
     dev: true
+
+  /cron@3.1.3:
+    resolution: {integrity: sha512-KVxeKTKYj2eNzN4ElnT6nRSbjbfhyxR92O/Jdp6SH3pc05CDJws59jBrZWEMQlxevCiE6QUTrXy+Im3vC3oD3A==}
+    dependencies:
+      '@types/luxon': 3.3.7
+      luxon: 3.4.4
+    dev: false
 
   /cross-fetch@3.1.5:
     resolution: {integrity: sha512-lvb1SBsI0Z7GDwmuid+mU3kWVBwTVUbe7S0H52yaaAdQOXq2YktTCZdlAcNKFzE6QtRz0snpw9bNiPeOIkkQvw==}
@@ -8178,6 +8206,11 @@ packages:
 
   /lunr@2.3.9:
     resolution: {integrity: sha512-zTU3DaZaF3Rt9rhN3uBMGQD3dD2/vFQqnvZCDv4dl5iOzq2IZQqTxu90r4E5J+nP70J3ilqVCrbho2eWaeW8Ow==}
+    dev: false
+
+  /luxon@3.4.4:
+    resolution: {integrity: sha512-zobTr7akeGHnv7eBOXcRgMeCP6+uyYsczwmeRCauvpvaAltgNyTbLH/+VaEAPUeWBT+1GuNmz4wC/6jtQzbbVA==}
+    engines: {node: '>=12'}
     dev: false
 
   /macos-release@2.5.1:
