@@ -1,9 +1,8 @@
 import { Logger } from "@nestjs/common";
-import { Prisma, PrismaPromise } from "@prisma/client";
+import { PrismaPromise } from "@prisma/client";
 
 import { PrismaService } from "../PrismaService";
 import { BaseIndexer, VinData, VoutData } from "./BaseIndexer";
-import { Vout } from "src/bitcoinrpc/providers/RpcProvider";
 
 export class OutputIndexer extends BaseIndexer  {
 
@@ -20,10 +19,11 @@ export class OutputIndexer extends BaseIndexer  {
     this.logger.log("Starting inscription indexer at height", height);
   }
 
-  async index(vins: VinData[], vouts: VoutData[]): Promise<PrismaPromise<void>[]> {
+  async index(vins: VinData[], vouts: VoutData[]): Promise<PrismaPromise<any>[]> {
 
     const outputs: VoutRow[] = [];
 
+    // eslint-disable-next-line no-restricted-syntax
     for (const vout of vouts) {
       outputs.push({
         addresses: vout.addresses,
@@ -42,12 +42,15 @@ export class OutputIndexer extends BaseIndexer  {
 
     const spentUpdates: PrismaPromise<VinRow>[] = [];
 
+    // eslint-disable-next-line no-restricted-syntax
     for (const vin of vins) {
       spentUpdates.push(
         this.prisma.output.update({
           where: {
-            voutTxid: vin.vout.txid,
-            voutTxIndex: vin.vout.n,
+            voutTxid_voutTxIndex: {
+              voutTxid: vin.vout.txid,
+              voutTxIndex: vin.vout.n,
+            },
           },
           data: {
             spent: true,
