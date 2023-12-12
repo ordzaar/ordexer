@@ -6,11 +6,17 @@ export const DATABASE_URL = "DATABASE_URL";
 export function appConfig() {
   return {
     dbUrl: process.env.DATABASE_URL,
-    rpcUri: process.env.RPC_URI,
-    rpcPort: process.env.RPC_PORT,
-    rpcUser: process.env.RPC_USER,
-    rpcPassword: process.env.RPC_PASSWORD,
-    ordUri: process.env.ORD_URI,
+    network: process.env.NETWORK,
+    bitcoinRpc: {
+      uri: process.env.BITCOIN_RPC_URI,
+      port: process.env.BITCOIN_RPC_PORT,
+      user: process.env.BITCOIN_RPC_USER,
+      password: process.env.BITCOIN_RPC_PASSWORD,
+    },
+    ord: {
+      uri: process.env.ORD_URI,
+      port: process.env.ORD_PORT
+    },
   };
 }
 
@@ -23,9 +29,11 @@ export type AppConfig = DeepPartial<ReturnType<typeof appConfig>>;
 
 export const ENV_VALIDATION_SCHEMA = Joi.object({
   DATABASE_URL: Joi.string(),
-  RPC_URI: Joi.string(),
-  RPC_PORT: Joi.number(),
-  RPC_USER: Joi.string(),
-  RPC_PASSWORD: Joi.string(),
+  NETWORK: Joi.string(),
+  BITCOIN_RPC_URI: Joi.string(),
+  BITCOIN_RPC_PORT: Joi.number(),
+  BITCOIN_RPC_USER: Joi.string(),
+  BITCOIN_RPC_PASSWORD: Joi.string(),
   ORD_URI: Joi.string(),
+  ORD_PORT: Joi.number(),
 });
