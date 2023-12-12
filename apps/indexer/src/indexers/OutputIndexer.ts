@@ -21,6 +21,7 @@ export class OutputIndexer extends BaseIndexer  {
 
   async index(vins: VinData[], vouts: VoutData[]): Promise<PrismaPromise<any>[]> {
 
+    const transactions: PrismaPromise<any>[] = [];
     const outputs: VoutRow[] = [];
 
     // eslint-disable-next-line no-restricted-syntax
@@ -35,16 +36,14 @@ export class OutputIndexer extends BaseIndexer  {
       })
     }
 
-    await this.prisma.output.createMany({
+    transactions.push(this.prisma.output.createMany({
       data: outputs,
       skipDuplicates: true,
-    });
-
-    const spentUpdates: PrismaPromise<VinRow>[] = [];
+    }));
 
     // eslint-disable-next-line no-restricted-syntax
     for (const vin of vins) {
-      spentUpdates.push(
+      transactions.push(
         this.prisma.output.update({
           where: {
             voutTxid_voutTxIndex: {
@@ -62,10 +61,7 @@ export class OutputIndexer extends BaseIndexer  {
         })
       );
     }
-
-    await this.prisma.$transaction(spentUpdates);
-
-    return [];
+    return transactions;
   }
 
   async indexBlock(height: number): Promise<PrismaPromise<void>[]> {
