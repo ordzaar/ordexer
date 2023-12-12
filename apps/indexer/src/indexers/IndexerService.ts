@@ -1,15 +1,18 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { Block, BitcoinService, ScriptPubKey } from "src/bitcoin/BitcoinService";
+import { BitcoinService, Block } from "src/bitcoin/BitcoinService";
 import { isCoinbaseTx } from "src/utils/Bitcoin";
+
 import { BaseIndexerHandler } from "./handlers/BaseHandler";
 import { InscriptionHandler } from "./handlers/InscriptionsHandler";
 import { OutputHandler } from "./handlers/OutputHandler";
+import { IndexOptions, VinData, VoutData } from "./types";
 
 @Injectable()
 export class IndexerService {
   private readonly logger = new Logger(IndexerService.name);
 
   private vins: VinData[] = [];
+  
   private vouts: VoutData[] = [];
 
   private handlers: BaseIndexerHandler[] = [];
@@ -22,7 +25,7 @@ export class IndexerService {
     this.registerHandlers();
   }
 
-  private async registerHandlers() {
+  private registerHandlers() {
     this.handlers.push(this.outputHndl, this.inscriptionHdl);
   }
 
@@ -128,37 +131,5 @@ export class IndexerService {
   }
 
   // TODO
-  private performReorg() { }
+  private performReorg() {}
 }
-
-export type IndexOptions = {
-  threshold: {
-    numBlocks: number;
-    numVins: number;
-    numVouts: number;
-  };
-};
-
-export type VinData = TxMeta & {
-  witness: string[];
-  block: BlockMeta;
-  vout: TxMeta;
-};
-
-export type VoutData = TxMeta & {
-  addresses: string[];
-  value: number;
-  scriptPubKey: ScriptPubKey;
-  block: BlockMeta;
-};
-
-type TxMeta = {
-  txid: string;
-  n: number;
-};
-
-type BlockMeta = {
-  hash: string;
-  height: number;
-  time: number;
-};

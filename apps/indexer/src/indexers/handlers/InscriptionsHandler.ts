@@ -1,6 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
+
+import { VinData, VoutData } from "../types";
 import { BaseIndexerHandler } from "./BaseHandler";
-import { VinData, VoutData } from "../IndexerService";
 
 @Injectable()
 export class InscriptionHandler extends BaseIndexerHandler {
@@ -10,6 +11,7 @@ export class InscriptionHandler extends BaseIndexerHandler {
     this.logger.log("commiting insription");
     return;
   }
+
   async reorg(fromHeight: number): Promise<void> {
     return;
   }

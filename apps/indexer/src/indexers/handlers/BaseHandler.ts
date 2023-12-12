@@ -1,4 +1,4 @@
-import { VinData, VoutData } from "../IndexerService";
+import { VinData, VoutData } from "../types";
 
 export abstract class BaseIndexerHandler {
   abstract commit(vins: VinData[], vouts: VoutData[]): Promise<void>;

@@ -1,14 +1,17 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { Cron, CronExpression } from "@nestjs/schedule";
-import { IndexerService } from "./IndexerService";
 import { BitcoinService } from "src/bitcoin/BitcoinService";
+
+import { IndexerService } from "./IndexerService";
 
 @Injectable()
 export class IndexerTask {
   private readonly logger = new Logger(IndexerTask.name);
 
   private indexing = false;
+  
   private outdated = false;
+
   private reorging = false;
 
   // TODO get/insert the value from db
@@ -17,7 +20,7 @@ export class IndexerTask {
   constructor(
     private indexerSvc: IndexerService,
     private bitcoinSvc: BitcoinService,
-  ) { }
+  ) {}
 
   get status() {
     return {
