@@ -132,6 +132,7 @@ export class IndexerService {
 
     // todo save the lastblock height into db
     // todo prisma transaction
+    this.prismaPromises = []
   }
 
   // TODO
