@@ -16,7 +16,7 @@ export class IndexerService {
 
   private vouts: VoutData[] = [];
 
-  private prismaPromises: PrismaPromise<any>[] = [];
+  private dbOperations: PrismaPromise<any>[] = [];
 
   private handlers: BaseIndexerHandler[] = [];
 
@@ -76,11 +76,13 @@ export class IndexerService {
   }
 
   private async handleBlock(block: Block<2>) {
+    // eslint-disable-next-line no-restricted-syntax
     for (const tx of block.tx) {
       const { txid } = tx;
 
       if (isCoinbaseTx(tx) === false) {
         let n = 0;
+        // eslint-disable-next-line no-restricted-syntax
         for (const vin of tx.vin) {
           this.vins.push({
             txid,
@@ -101,6 +103,7 @@ export class IndexerService {
       }
 
       let n = 0;
+      // eslint-disable-next-line no-restricted-syntax
       for (const vout of tx.vout) {
         this.vouts.push({
           txid,
@@ -122,9 +125,10 @@ export class IndexerService {
   private async commitVinVout(lastBlockHeight: number) {
     this.logger.log(`commiting block: ${lastBlockHeight}`);
 
+    // eslint-disable-next-line no-restricted-syntax
     for (const handler of this.handlers) {
       // this.logger.log(`commiting ${handler.name}`);
-      await handler.commit(this.vins, this.vouts, this.prismaPromises);
+      await handler.commit(this.vins, this.vouts, this.dbOperations);
     }
 
     this.vins = [];
@@ -132,7 +136,7 @@ export class IndexerService {
 
     // todo save the lastblock height into db
     // todo prisma transaction
-    this.prismaPromises = [];
+    this.dbOperations = [];
   }
 
   // TODO

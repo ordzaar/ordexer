@@ -17,10 +17,9 @@ export class OutputHandler extends BaseIndexerHandler {
     this.logger = new Logger(OutputHandler.name);
   }
 
-  async commit(vins: VinData[], vouts: VoutData[], prismaPromises: PrismaPromise<any>[]): Promise<void> {
+  async commit(vins: VinData[], vouts: VoutData[], dbOperations: PrismaPromise<any>[]): Promise<void> {
     this.logger.log("commiting output");
 
-    const transactions: PrismaPromise<any>[] = [];
     const outputs: VoutRow[] = [];
 
     // eslint-disable-next-line no-restricted-syntax
@@ -35,14 +34,14 @@ export class OutputHandler extends BaseIndexerHandler {
       })
     }
 
-    transactions.push(this.prisma.output.createMany({
+    dbOperations.push(this.prisma.output.createMany({
       data: outputs,
       skipDuplicates: true,
     }));
 
     // eslint-disable-next-line no-restricted-syntax
     for (const vin of vins) {
-      transactions.push(
+      dbOperations.push(
         this.prisma.output.update({
           where: {
             voutTxid_voutTxIndex: {
@@ -59,19 +58,18 @@ export class OutputHandler extends BaseIndexerHandler {
           }
         })
       );
-    }
-    return transactions;
+    };
   }
 
-  async reorg(fromHeight: number, prismaPromises: PrismaPromise<any>[]): Promise<void> {
+  async reorg(fromHeight: number, dbOperations: PrismaPromise<any>[]): Promise<void> {
     this.logger.log(`reorging output from height ${fromHeight}`);
-    await this.prisma.output.deleteMany({
+    dbOperations.push(this.prisma.output.deleteMany({
       where: {
         voutBlockHeight: {
           gte: fromHeight,
         },
       },
-    });
+    }));
     // TODO: update spent outputs
   }
 }
