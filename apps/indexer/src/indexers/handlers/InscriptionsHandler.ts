@@ -18,8 +18,6 @@ export class InscriptionHandler extends BaseIndexerHandler {
 
   async commit(vins: VinData[], vouts: VoutData[], dbOperations: PrismaPromise<any>[]): Promise<void> {
     this.logger.log("commiting insription");
-
-    
   }
 
   async reorg(fromHeight: number, dbOperations: PrismaPromise<any>[]): Promise<void> {}
