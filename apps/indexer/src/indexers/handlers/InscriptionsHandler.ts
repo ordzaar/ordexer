@@ -8,9 +8,9 @@ import { BaseIndexerHandler } from "./BaseHandler";
 export class InscriptionHandler extends BaseIndexerHandler {
   private readonly logger = new Logger(InscriptionHandler.name);
 
-  async commit(vins: VinData[], vouts: VoutData[], prismaPromises: PrismaPromise<any>[]): Promise<void> {
+  async commit(vins: VinData[], vouts: VoutData[], dbOperations: PrismaPromise<any>[]): Promise<void> {
     this.logger.log("commiting insription");
   }
 
-  async reorg(fromHeight: number, prismaPromises: PrismaPromise<any>[]): Promise<void> { }
+  async reorg(fromHeight: number, dbOperations: PrismaPromise<any>[]): Promise<void> { }
 }
