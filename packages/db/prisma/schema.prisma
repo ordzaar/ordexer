@@ -17,6 +17,7 @@ model Output {
   id                String                @id @default(uuid())
   addresses         String[]
   value             Int
+  scriptPubKey      Json
 
   // Each output is the output of exactly one transaction
   voutBlockHash     String
@@ -33,31 +34,17 @@ model Output {
   
   spent             Boolean               @default(true)
 
+  inscriptions      Inscription[]
+
   @@index([voutBlockHeight])
   @@unique([voutTxid, voutTxIndex])
   @@unique([vinTxid, vinTxIndex])
 }
 
-
-model Utxo {
-  id                String                @id @default(uuid())
-  txid              String
-  index             Int
-  sats              Int
-  address           String
-  location          String                @unique
-  satRanges         Int[]                 @default([])
-
-  // A UTXO can have multiple inscriptions
-  inscriptions  Inscription[]
-
-  @@unique([txid, index])
-}
-
 model Inscription {
   id                String                @id @default(uuid())
-  utxo              Utxo                  @relation(fields: [utxoId], references: [id])
-  utxoId            String
+  output            Output                @relation(fields: [outputId], references: [id])
+  outputId          String
   creator           String
   owner             String?
   sat               Int

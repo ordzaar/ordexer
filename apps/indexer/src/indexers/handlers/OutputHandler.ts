@@ -1,5 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { PrismaPromise } from "@prisma/client";
+import { ScriptPubKey } from "src/bitcoin/BitcoinService";
 
 import { PrismaService } from "../../PrismaService";
 import { VinData, VoutData } from "../types";
@@ -27,6 +28,7 @@ export class OutputHandler extends BaseIndexerHandler {
       outputs.push({
         addresses: vout.addresses,
         value: vout.value,
+        scriptPubKey: vout.scriptPubKey,
         voutBlockHash: vout.block.hash,
         voutBlockHeight: vout.block.height,
         voutTxid: vout.txid,
@@ -77,6 +79,7 @@ export class OutputHandler extends BaseIndexerHandler {
 type VoutRow = {
   addresses: string[];
   value: number;
+  scriptPubKey: ScriptPubKey;
   voutBlockHash: string;
   voutBlockHeight: number;
   voutTxid: string;
