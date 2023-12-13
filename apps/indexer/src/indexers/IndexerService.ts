@@ -1,7 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { PrismaPromise } from "@prisma/client";
 import { BitcoinService, Block } from "src/bitcoin/BitcoinService";
-import { isCoinbaseTx } from "src/utils/Bitcoin";
+import { isCoinbaseTx } from "src/bitcoin/utils/Transaction";
 
 import { BaseIndexerHandler } from "./handlers/BaseHandler";
 import { InscriptionHandler } from "./handlers/InscriptionsHandler";
@@ -132,7 +132,7 @@ export class IndexerService {
 
     // todo save the lastblock height into db
     // todo prisma transaction
-    this.prismaPromises = []
+    this.prismaPromises = [];
   }
 
   // TODO
