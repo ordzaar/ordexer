@@ -1,5 +1,6 @@
 import { ScriptPubKey } from "src/bitcoin/BitcoinService";
 
+export const INDEXER_LAST_HEIGHT_KEY = "last_height";
 
 export type IndexOptions = {
   threshold: {
