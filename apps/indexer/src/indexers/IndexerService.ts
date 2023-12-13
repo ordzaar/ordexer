@@ -19,7 +19,7 @@ export class IndexerService {
 
   private vouts: VoutData[] = [];
 
-  private prismaPromises: PrismaPromise<any>[] = [];
+  private dbOperations: PrismaPromise<any>[] = [];
 
   private handlers: BaseIndexerHandler[] = [];
 
@@ -136,7 +136,7 @@ export class IndexerService {
     this.logger.log(`commiting block: ${lastBlockHeight}`);
 
     for (let i = 0; i < this.handlers.length; i += 1) {
-      await this.handlers[i].commit(this.vins, this.vouts, this.prismaPromises);
+      await this.handlers[i].commit(this.vins, this.vouts, this.dbOperations);
     }
 
     this.vins = [];
@@ -144,9 +144,9 @@ export class IndexerService {
 
     // todo save the lastblock height into db
     // todo prisma transaction
-    this.prismaPromises = [];
+    this.dbOperations = [];
   }
 
   // TODO
-  private performReorg() {}
+  private performReorg() { }
 }
