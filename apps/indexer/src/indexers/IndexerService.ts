@@ -1,4 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common";
+import { PrismaPromise } from "@prisma/client";
 import { BitcoinService, Block } from "src/bitcoin/BitcoinService";
 import { isCoinbaseTx } from "src/utils/Bitcoin";
 
@@ -12,8 +13,10 @@ export class IndexerService {
   private readonly logger = new Logger(IndexerService.name);
 
   private vins: VinData[] = [];
-  
+
   private vouts: VoutData[] = [];
+
+  private prismaPromises: PrismaPromise<any>[] = [];
 
   private handlers: BaseIndexerHandler[] = [];
 
@@ -36,7 +39,7 @@ export class IndexerService {
 
     let blockhash = await this.bitcoinSvc.getBlockHash(fromBlock);
 
-    while (blockhash != undefined && blockHeight <= toBlock) {
+    while (blockhash !== undefined && blockHeight <= toBlock) {
       this.logger.log(`reading block ${blockHeight} from node`);
       const block = await this.bitcoinSvc.getBlock(blockhash, 2);
 
@@ -74,7 +77,7 @@ export class IndexerService {
 
   private async handleBlock(block: Block<2>) {
     for (const tx of block.tx) {
-      const txid = tx.txid;
+      const { txid } = tx;
 
       if (isCoinbaseTx(tx) === false) {
         let n = 0;
@@ -121,15 +124,16 @@ export class IndexerService {
 
     for (const handler of this.handlers) {
       // this.logger.log(`commiting ${handler.name}`);
-      await handler.commit(this.vins, this.vouts);
+      await handler.commit(this.vins, this.vouts, this.prismaPromises);
     }
 
     this.vins = [];
     this.vouts = [];
 
     // todo save the lastblock height into db
+    // todo prisma transaction
   }
 
   // TODO
-  private performReorg() {}
+  private performReorg() { }
 }

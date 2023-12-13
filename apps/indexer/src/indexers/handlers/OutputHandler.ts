@@ -17,7 +17,7 @@ export class OutputHandler extends BaseIndexerHandler {
     this.logger = new Logger(OutputHandler.name);
   }
 
-  async commit(vins: VinData[], vouts: VoutData[]): Promise<PrismaPromise<any>[]> {
+  async commit(vins: VinData[], vouts: VoutData[], prismaPromises: PrismaPromise<any>[]): Promise<void> {
     this.logger.log("commiting output");
 
     const transactions: PrismaPromise<any>[] = [];
@@ -63,7 +63,7 @@ export class OutputHandler extends BaseIndexerHandler {
     return transactions;
   }
 
-  async reorg(fromHeight: number): Promise<void> {
+  async reorg(fromHeight: number, prismaPromises: PrismaPromise<any>[]): Promise<void> {
     this.logger.log(`reorging output from height ${fromHeight}`);
     await this.prisma.output.deleteMany({
       where: {
