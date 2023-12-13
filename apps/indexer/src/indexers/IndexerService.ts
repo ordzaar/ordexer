@@ -145,12 +145,11 @@ export class IndexerService {
 
     this.vins = [];
     this.vouts = [];
+    this.dbOperations = [];
 
     // todo save the lastblock height into db
-    // todo prisma transaction
-    this.dbOperations = [];
   }
 
   // TODO
-  private performReorg() { }
+  private performReorg() {}
 }
