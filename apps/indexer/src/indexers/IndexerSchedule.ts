@@ -2,8 +2,10 @@ import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { Cron, CronExpression } from "@nestjs/schedule";
 import { BitcoinService } from "src/bitcoin/BitcoinService";
+import { PrismaService } from "src/PrismaService";
 
 import { IndexerService } from "./IndexerService";
+import { INDEXER_LAST_HEIGHT_KEY } from "./types";
 
 @Injectable()
 export class IndexerTask {
@@ -15,13 +17,11 @@ export class IndexerTask {
 
   private reorging = false;
 
-  // TODO get/insert the value from db
-  private dbLastHeight = 100000;
-
   constructor(
     private readonly configService: ConfigService,
     private indexerSvc: IndexerService,
     private bitcoinSvc: BitcoinService,
+    private prisma: PrismaService,
   ) {}
 
   get status() {
@@ -38,14 +38,21 @@ export class IndexerTask {
     this.logger.log("check for block");
 
     // TODO set status reorging & outdated
+    // TODO reorg check
 
     this.indexing = true;
 
-    const lastHeight = this.dbLastHeight;
-    // const targetBlock = await this.bitcoinSvc.getBlockCount();
-    const targetBlock = 100005;
+    let fromHeight = 0;
+    const indexerRow = await this.prisma.indexer.findFirst({
+      where: {
+        name: INDEXER_LAST_HEIGHT_KEY,
+      },
+    });
+    if (indexerRow) {
+      fromHeight = indexerRow.block + 1;
+    }
 
-    // TODO reorg check
+    const targetBlock = await this.bitcoinSvc.getBlockCount();
 
     const indexOptions = {
       threshold: {
@@ -54,13 +61,11 @@ export class IndexerTask {
         numVouts: this.configService.get<number>("indexerThreshold.numVouts")!,
       },
     };
-    if (lastHeight < targetBlock) {
-      this.logger.log("start indexing");
-      await this.indexerSvc.index(lastHeight + 1, targetBlock, indexOptions);
-    }
 
-    // TODO insert the value to db
-    this.dbLastHeight = targetBlock;
+    if (fromHeight < targetBlock) {
+      this.logger.log("start indexing");
+      await this.indexerSvc.index(fromHeight, targetBlock, indexOptions);
+    }
 
     this.indexing = false;
   }
