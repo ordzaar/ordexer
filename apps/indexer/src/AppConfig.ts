@@ -15,7 +15,13 @@ export function appConfig() {
     },
     ord: {
       uri: process.env.ORD_URI,
-      port: process.env.ORD_PORT
+      port: process.env.ORD_PORT,
+    },
+    voutPromiseLimiter: parseInt(process.env.VOUT_PROMISE_LIMITER ?? "1", 10),
+    indexerThreshold: {
+      numBlocks: parseInt(process.env.INDEXER_THRESHOLD_NUM_BLOCKS ?? "5000", 10),
+      numVins: parseInt(process.env.INDEXER_THRESHOLD_NUM_VINS ?? "250000", 10),
+      numVouts: parseInt(process.env.INDEXER_THRESHOLD_NUM_VOUTS ?? "250000", 10),
     },
   };
 }
