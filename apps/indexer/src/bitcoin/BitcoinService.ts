@@ -1,6 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { extractAddress } from "src/utils/Bitcoin";
+
+import { extractAddress } from "./utils/Address";
 
 @Injectable()
 export class BitcoinService {
@@ -84,7 +85,7 @@ export class BitcoinService {
     return this.rpc<string[]>("deriveaddresses", args);
   }
 
-  //method
+  // method
 
   async getAddressessFromVout(vout: Vout) {
     if (vout.scriptPubKey.address !== undefined) {
@@ -257,7 +258,7 @@ export type Block<Verbosity = 1> = {
   nextblockhash: string;
 };
 
-type TxOut = {
+export type TxOut = {
   bestblock: string;
   confirmations: number;
   value: number;
