@@ -1,4 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { Cron, CronExpression } from "@nestjs/schedule";
 import { BitcoinService } from "src/bitcoin/BitcoinService";
 
@@ -9,7 +10,7 @@ export class IndexerTask {
   private readonly logger = new Logger(IndexerTask.name);
 
   private indexing = false;
-  
+
   private outdated = false;
 
   private reorging = false;
@@ -18,6 +19,7 @@ export class IndexerTask {
   private dbLastHeight = 100000;
 
   constructor(
+    private readonly configService: ConfigService,
     private indexerSvc: IndexerService,
     private bitcoinSvc: BitcoinService,
   ) {}
@@ -45,12 +47,11 @@ export class IndexerTask {
 
     // TODO reorg check
 
-    // TODO create config for this
     const indexOptions = {
       threshold: {
-        numBlocks: 5_000,
-        numVins: 250_000,
-        numVouts: 250_000,
+        numBlocks: this.configService.get<number>("indexerThreshold.numBlocks")!,
+        numVins: this.configService.get<number>("indexerThreshold.numVins")!,
+        numVouts: this.configService.get<number>("indexerThreshold.numVouts")!,
       },
     };
     if (lastHeight < targetBlock) {
