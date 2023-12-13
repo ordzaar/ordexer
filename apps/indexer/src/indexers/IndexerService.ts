@@ -156,7 +156,9 @@ export class IndexerService {
       }),
     );
 
+    const dbTxTs = perf();
     await this.prisma.$transaction(this.dbOperations);
+    this.logger.log(`executing db tx, took ${dbTxTs.now}s`);
 
     this.vins = [];
     this.vouts = [];
