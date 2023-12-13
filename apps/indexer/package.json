@@ -24,6 +24,7 @@
     "@fastify/multipart": "^8.0.0",
     "@logtail/pino": "^0.4.17",
     "@nestjs/axios": "^3.0.1",
+    "@nestjs/schedule": "^4.0.0",
     "@ordzaar/ordexer-db": "workspace:*",
     "@ordzaar/standard-api-fastify": "^0.4.4",
     "@prisma/client": "^5.6.0",

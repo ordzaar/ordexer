@@ -39,4 +39,8 @@ export class OrdProvider{
   async getHeight(): Promise<number> {
     return this.call<number>("/blockheight");
   }
+
+  async getInscription(id: string): Promise<any> {
+    return this.call<any>(`/inscription/${id}`);
+  }
 }
