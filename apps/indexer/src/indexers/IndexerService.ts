@@ -3,6 +3,7 @@ import { PrismaPromise } from "@prisma/client";
 import { BitcoinService, Block } from "src/bitcoin/BitcoinService";
 import { isCoinbaseTx } from "src/bitcoin/utils/Transaction";
 
+import { PrismaService } from "../PrismaService";
 import { BaseIndexerHandler } from "./handlers/BaseHandler";
 import { InscriptionHandler } from "./handlers/InscriptionsHandler";
 import { OutputHandler } from "./handlers/OutputHandler";
@@ -24,6 +25,7 @@ export class IndexerService {
     private bitcoinSvc: BitcoinService,
     private inscriptionHdl: InscriptionHandler,
     private outputHndl: OutputHandler,
+    private prisma: PrismaService,
   ) {
     this.registerHandlers();
   }
@@ -130,6 +132,8 @@ export class IndexerService {
       // this.logger.log(`commiting ${handler.name}`);
       await handler.commit(this.vins, this.vouts, this.dbOperations);
     }
+
+    await this.prisma.$transaction(this.dbOperations);
 
     this.vins = [];
     this.vouts = [];
