@@ -8,8 +8,7 @@ import { BaseIndexerHandler } from "./BaseHandler";
 
 @Injectable()
 export class OutputHandler extends BaseIndexerHandler {
-
-  private readonly logger: Logger;
+  private readonly logger = new Logger(OutputHandler.name);
 
   constructor(
     private prisma: PrismaService,

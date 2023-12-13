@@ -1,7 +1,10 @@
 import { Injectable, Logger } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { PrismaPromise } from "@prisma/client";
 import { BitcoinService, Block } from "src/bitcoin/BitcoinService";
 import { isCoinbaseTx } from "src/bitcoin/utils/Transaction";
+import { perf } from "src/utils/Log";
+import { promiseLimiter } from "src/utils/Promise";
 
 import { PrismaService } from "../PrismaService";
 import { BaseIndexerHandler } from "./handlers/BaseHandler";
@@ -22,6 +25,7 @@ export class IndexerService {
   private handlers: BaseIndexerHandler[] = [];
 
   constructor(
+    private readonly configService: ConfigService,
     private bitcoinSvc: BitcoinService,
     private inscriptionHdl: InscriptionHandler,
     private outputHndl: OutputHandler,
@@ -42,13 +46,16 @@ export class IndexerService {
     let blockhash = await this.bitcoinSvc.getBlockHash(fromBlock);
 
     while (blockhash !== undefined && blockHeight <= toBlock) {
-      this.logger.log(`reading block ${blockHeight} from node`);
+      const readingBlockTs = perf();
       const block = await this.bitcoinSvc.getBlock(blockhash, 2);
+      this.logger.log(`reading block: ${blockHeight}, took ${readingBlockTs.now}s`);
 
       // ### Block
       // Process the block and extract all the vin and vout information required
       // by subsequent index handlers.
+      const handleBlockTs = perf();
       await this.handleBlock(block);
+      this.logger.log(`handling block: ${blockHeight}, took ${handleBlockTs.now}s`);
 
       // ### Commit
       // Once we reach configured tresholds we commit the current vins and vouts
@@ -78,71 +85,71 @@ export class IndexerService {
   }
 
   private async handleBlock(block: Block<2>) {
-    // eslint-disable-next-line no-restricted-syntax
-    for (const tx of block.tx) {
-      const { txid } = tx;
+    // lazy address promises, resolve the address lookup later by concurent process
+    const voutsAddressPromisesLimiter = promiseLimiter<string[]>(this.configService.get<number>("voutPromiseLimiter")!);
 
-      if (isCoinbaseTx(tx) === false) {
-        let n = 0;
-        // eslint-disable-next-line no-restricted-syntax
-        for (const vin of tx.vin) {
+    // use a native loop instead of a 'for-of' loop for performance reasons
+    for (let i = 0; i < block.tx.length; i += 1) {
+      if (isCoinbaseTx(block.tx[i]) === false) {
+        for (let j = 0; j < block.tx[i].vin.length; j += 1) {
           this.vins.push({
-            txid,
-            n,
-            witness: vin.txinwitness ?? [],
+            txid: block.tx[i].txid,
+            n: j,
+            witness: block.tx[i].vin[j].txinwitness ?? [],
             block: {
               hash: block.hash,
               height: block.height,
               time: block.time,
             },
             vout: {
-              txid: vin.txid,
-              n: vin.vout,
+              txid: block.tx[i].vin[j].txid,
+              n: block.tx[i].vin[j].vout,
             },
           });
-          n += 1;
         }
       }
 
-      let n = 0;
-      // eslint-disable-next-line no-restricted-syntax
-      for (const vout of tx.vout) {
+      for (let j = 0; j < block.tx[i].vout.length; j += 1) {
+        voutsAddressPromisesLimiter.push(async () => this.bitcoinSvc.getAddressessFromVout(block.tx[i].vout[j]));
+
         this.vouts.push({
-          txid,
-          n,
-          addresses: await this.bitcoinSvc.getAddressessFromVout(vout),
-          value: vout.value,
-          scriptPubKey: vout.scriptPubKey,
+          txid: block.tx[i].txid,
+          n: j,
+          addresses: [],
+          value: block.tx[i].vout[j].value,
+          scriptPubKey: block.tx[i].vout[j].scriptPubKey,
           block: {
             hash: block.hash,
             height: block.height,
             time: block.time,
           },
         });
-        n += 1;
       }
+    }
+
+    // insert resolved addresses to existing vouts
+    const voutsAddresses = await voutsAddressPromisesLimiter.run();
+    for (let j = 0; j < voutsAddresses.length; j += 1) {
+      this.vouts[this.vouts.length - voutsAddresses.length + j].addresses = voutsAddresses[j];
     }
   }
 
   private async commitVinVout(lastBlockHeight: number) {
     this.logger.log(`commiting block: ${lastBlockHeight}`);
 
-    // eslint-disable-next-line no-restricted-syntax
-    for (const handler of this.handlers) {
-      // this.logger.log(`commiting ${handler.name}`);
-      await handler.commit(this.vins, this.vouts, this.dbOperations);
+    for (let i = 0; i < this.handlers.length; i += 1) {
+      await this.handlers[i].commit(this.vins, this.vouts, this.dbOperations);
     }
 
     await this.prisma.$transaction(this.dbOperations);
 
     this.vins = [];
     this.vouts = [];
+    this.dbOperations = [];
 
     // todo save the lastblock height into db
-    // todo prisma transaction
-    this.dbOperations = [];
   }
 
   // TODO
-  private performReorg() { }
+  private performReorg() {}
 }
