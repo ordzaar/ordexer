@@ -11,6 +11,9 @@ datasource db {
 model Indexer {
   id    String @id @default(uuid())
   block Int
+  name  String
+
+  @@unique([name])
 }
 
 model Output {

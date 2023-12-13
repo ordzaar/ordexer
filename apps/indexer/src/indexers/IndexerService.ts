@@ -10,7 +10,7 @@ import { PrismaService } from "../PrismaService";
 import { BaseIndexerHandler } from "./handlers/BaseHandler";
 import { InscriptionHandler } from "./handlers/InscriptionsHandler";
 import { OutputHandler } from "./handlers/OutputHandler";
-import { IndexOptions, VinData, VoutData } from "./types";
+import { INDEXER_LAST_HEIGHT_KEY, IndexOptions, VinData, VoutData } from "./types";
 
 @Injectable()
 export class IndexerService {
@@ -141,13 +141,26 @@ export class IndexerService {
       await this.handlers[i].commit(this.vins, this.vouts, this.dbOperations);
     }
 
+    this.dbOperations.push(
+      this.prisma.indexer.upsert({
+        where: {
+          name: INDEXER_LAST_HEIGHT_KEY,
+        },
+        update: {
+          block: lastBlockHeight,
+        },
+        create: {
+          name: INDEXER_LAST_HEIGHT_KEY,
+          block: lastBlockHeight,
+        },
+      }),
+    );
+
     await this.prisma.$transaction(this.dbOperations);
 
     this.vins = [];
     this.vouts = [];
     this.dbOperations = [];
-
-    // todo save the lastblock height into db
   }
 
   // TODO
