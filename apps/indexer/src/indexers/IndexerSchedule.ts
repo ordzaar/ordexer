@@ -36,7 +36,7 @@ export class IndexerTask {
   async checkForBlock() {
     if (this.indexing) return;
     this.indexing = true;
-    this.logger.log("check for block");
+    this.logger.log("[INDEXER_SCHEDULE] check for block");
 
     // TODO set status outdated
 
@@ -56,15 +56,15 @@ export class IndexerTask {
       const reorgBlockLength = this.configService.get<number>("indexer.reorgLength")!;
       const lastHealthyBlockHeight = await this.indexerService.getReorgHeight(indexerBlockHeight, reorgBlockLength);
       if (lastHealthyBlockHeight < indexerBlockHeight) {
-        this.logger.log("indexer is not healthy, need to perform reorg");
-        this.logger.log("performing reorg..");
+        this.logger.log("[INDEXER_SCHEDULE|REORG_CHECK] indexer is not healthy, need to perform reorg");
+        this.logger.log("[INDEXER_SCHEDULE|REORG_CHECK] performing reorg..");
         await this.indexerService.performReorg(lastHealthyBlockHeight);
 
         indexerBlockHeight = lastHealthyBlockHeight;
       }
       this.reorging = false;
     }
-    this.logger.log("indexer is healthy");
+    this.logger.log("[INDEXER_SCHEDULE] indexer is healthy");
 
     const targetBlockHeight = await this.bitcoinService.getBlockCount();
     if (indexerBlockHeight >= targetBlockHeight) {
@@ -73,7 +73,7 @@ export class IndexerTask {
     }
 
     // indexing
-    this.logger.log("start indexing..");
+    this.logger.log("[INDEXER_SCHEDULE] start indexing..");
     const indexOptions = {
       threshold: {
         numBlocks: this.configService.get<number>("indexer.threshold.numBlocks")!,
@@ -82,6 +82,6 @@ export class IndexerTask {
       },
     };
     const fromBlockHeight = indexerBlockHeight + 1;
-    await this.indexerService.index(fromBlockHeight, targetBlockHeight, indexOptions);
+    await this.indexerService.indexBlock(fromBlockHeight, targetBlockHeight, indexOptions);
   }
 }

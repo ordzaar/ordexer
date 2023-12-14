@@ -38,8 +38,8 @@ export class IndexerService {
     this.handlers.push(this.outputHandler, this.inscriptionHandler);
   }
 
-  async index(fromBlockHeight: number, toBlockHeight: number, options: IndexOptions) {
-    this.logger.log(`indexing from block ${fromBlockHeight} to ${toBlockHeight}`);
+  async indexBlock(fromBlockHeight: number, toBlockHeight: number, options: IndexOptions) {
+    this.logger.log(`[INDEXER|INDEX_BLOCK] indexing from block ${fromBlockHeight} to ${toBlockHeight}..`);
 
     let blockHeight = fromBlockHeight;
 
@@ -48,19 +48,19 @@ export class IndexerService {
     while (blockhash && blockHeight <= toBlockHeight) {
       const readingBlockTs = perf();
       const block = await this.bitcoinService.getBlock(blockhash, 2);
-      this.logger.log(`reading block: ${blockHeight}, took ${readingBlockTs.now}s`);
+      this.logger.log(`[INDEXER|INDEX_BLOCK] reading block: ${blockHeight}, took ${readingBlockTs.now} s`);
 
       // ### Block
       // Process the block and extract all the vin and vout information required
       // by subsequent index handlers.
       const handleBlockTs = perf();
       await this.handleBlock(block);
-      this.logger.log(`handling block: ${blockHeight}, took ${handleBlockTs.now}s`);
+      this.logger.log(`[INDEXER|INDEX_BLOCK] handling block: ${blockHeight}, took ${handleBlockTs.now} s`);
 
       // ### Commit
-      // Once we reach configured tresholds we commit the current vins and vouts
+      // Once we reach configured thresholds we commit the current vins and vouts
       // to the registered index handlers.
-      if (this.hasReachedTreshold(blockHeight, options)) {
+      if (this.hasReachedThreshold(blockHeight, options)) {
         await this.commitVinVout(blockHeight);
       }
 
@@ -105,12 +105,13 @@ export class IndexerService {
       continue;
     }
 
-    throw new Error(
-      `reorg block si more than the treshold, block is not healthy, please check it manually or increase the reorg threshold`,
-    );
+    const msg =
+      "[INDEXER|REORG_HEIGHT] reorg block value si more than the threshold, block is not healthy, please check it manually or increase the reorg threshold";
+    this.logger.log(msg);
+    throw new Error(msg);
   }
 
-  private hasReachedTreshold(blockHeight: number, options: IndexOptions) {
+  private hasReachedThreshold(blockHeight: number, options: IndexOptions) {
     if (blockHeight !== 0 && blockHeight % options.threshold.numBlocks === 0) {
       return true;
     }
@@ -174,7 +175,7 @@ export class IndexerService {
   }
 
   private async commitVinVout(lastBlockHeight: number) {
-    this.logger.log(`commiting block: ${lastBlockHeight}`);
+    this.logger.log(`[INDEXER|COMMIT] commiting block: ${lastBlockHeight}..`);
 
     for (let i = 0; i < this.handlers.length; i += 1) {
       await this.handlers[i].commit(this.vins, this.vouts, this.dbOperations);
@@ -197,7 +198,7 @@ export class IndexerService {
 
     const dbTxTs = perf();
     await this.prisma.$transaction(this.dbOperations);
-    this.logger.log(`executing commit db tx, took ${dbTxTs.now}s`);
+    this.logger.log(`[INDEXER|COMMIT] executing commit db tx, took ${dbTxTs.now} s`);
 
     this.vins = [];
     this.vouts = [];
@@ -223,7 +224,7 @@ export class IndexerService {
 
     const dbTxTs = perf();
     await this.prisma.$transaction(this.dbOperations);
-    this.logger.log(`executing reorg db tx, took ${dbTxTs.now}s`);
+    this.logger.log(`[INDEXER|REORG] executing reorg db tx, took ${dbTxTs.now} s`);
 
     this.dbOperations = [];
   }
