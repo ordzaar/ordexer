@@ -19,8 +19,8 @@ export class IndexerTask {
 
   constructor(
     private readonly configService: ConfigService,
-    private indexerSvc: IndexerService,
-    private bitcoinSvc: BitcoinService,
+    private indexerService: IndexerService,
+    private bitcoinService: BitcoinService,
     private prisma: PrismaService,
   ) {}
 
@@ -35,38 +35,53 @@ export class IndexerTask {
   @Cron(CronExpression.EVERY_5_SECONDS)
   async checkForBlock() {
     if (this.indexing) return;
-    this.logger.log("check for block");
-
-    // TODO set status reorging & outdated
-    // TODO reorg check
-
     this.indexing = true;
+    this.logger.log("[INDEXER_SCHEDULE] check for block");
 
-    let fromHeight = 0;
+    // TODO set status outdated
+
+    let indexerBlockHeight = -1;
     const indexerRow = await this.prisma.indexer.findFirst({
       where: {
         name: INDEXER_LAST_HEIGHT_KEY,
       },
     });
     if (indexerRow) {
-      fromHeight = indexerRow.block + 1;
+      indexerBlockHeight = indexerRow.block;
     }
 
-    const targetBlock = await this.bitcoinSvc.getBlockCount();
+    // check for reorg
+    if (indexerBlockHeight !== -1) {
+      this.reorging = true;
+      const reorgBlockLength = this.configService.get<number>("indexer.reorgLength")!;
+      const lastHealthyBlockHeight = await this.indexerService.getReorgHeight(indexerBlockHeight, reorgBlockLength);
+      if (lastHealthyBlockHeight < indexerBlockHeight) {
+        this.logger.log("[INDEXER_SCHEDULE|REORG_CHECK] indexer is not healthy, need to perform reorg");
+        this.logger.log("[INDEXER_SCHEDULE|REORG_CHECK] performing reorg..");
+        await this.indexerService.performReorg(lastHealthyBlockHeight);
 
+        indexerBlockHeight = lastHealthyBlockHeight;
+      }
+      this.reorging = false;
+    }
+    this.logger.log("[INDEXER_SCHEDULE] indexer is healthy");
+
+    const targetBlockHeight = await this.bitcoinService.getBlockCount();
+    if (indexerBlockHeight >= targetBlockHeight) {
+      this.indexing = false;
+      return;
+    }
+
+    // indexing
+    this.logger.log("[INDEXER_SCHEDULE] start indexing..");
     const indexOptions = {
       threshold: {
-        numBlocks: this.configService.get<number>("indexerThreshold.numBlocks")!,
-        numVins: this.configService.get<number>("indexerThreshold.numVins")!,
-        numVouts: this.configService.get<number>("indexerThreshold.numVouts")!,
+        numBlocks: this.configService.get<number>("indexer.threshold.numBlocks")!,
+        numVins: this.configService.get<number>("indexer.threshold.numVins")!,
+        numVouts: this.configService.get<number>("indexer.threshold.numVouts")!,
       },
     };
-
-    if (fromHeight < targetBlock) {
-      this.logger.log("start indexing");
-      await this.indexerSvc.index(fromHeight, targetBlock, indexOptions);
-    }
-
-    this.indexing = false;
+    const fromBlockHeight = indexerBlockHeight + 1;
+    await this.indexerService.indexBlock(fromBlockHeight, targetBlockHeight, indexOptions);
   }
 }

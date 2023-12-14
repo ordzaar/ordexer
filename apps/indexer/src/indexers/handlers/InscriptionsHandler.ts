@@ -22,8 +22,9 @@ export class InscriptionHandler extends BaseIndexerHandler {
     this.logger = new Logger(InscriptionHandler.name);
   }
 
+  // eslint-disable-next-line
   async commit(vins: VinData[], vouts: VoutData[], dbOperations: PrismaPromise<any>[]): Promise<void> {
-    this.logger.log("commiting insription");
+    this.logger.log("[INSCRIPTION_HANDLER|COMMIT] commiting insription..");
 
     const { height } = vins[vins.length - 1].block;
 
