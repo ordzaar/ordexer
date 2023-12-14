@@ -24,8 +24,8 @@ importers:
   apps/api:
     dependencies:
       '@defichain/jellyfish-json':
-        specifier: ^4.0.1
-        version: 4.0.1(defichain@4.0.1)
+        specifier: ^4.0.5
+        version: 4.0.5(defichain@4.0.5)
       '@fastify/multipart':
         specifier: ^8.0.0
         version: 8.0.0
@@ -145,8 +145,8 @@ importers:
   apps/indexer:
     dependencies:
       '@defichain/jellyfish-json':
-        specifier: ^4.0.1
-        version: 4.0.1(defichain@4.0.1)
+        specifier: ^4.0.5
+        version: 4.0.5(defichain@4.0.5)
       '@fastify/multipart':
         specifier: ^8.0.0
         version: 8.0.0
@@ -1681,14 +1681,14 @@ packages:
       '@jridgewell/trace-mapping': 0.3.9
     dev: true
 
-  /@defichain/jellyfish-json@4.0.1(defichain@4.0.1):
-    resolution: {integrity: sha512-keAsIy3krxv+o1A45naMAkO4PPeKFDOC8t6vq57U2jMqV663g7GF/N4N6ph2UWGiXwo4wRvZgj/q7ZiWRlxECg==}
+  /@defichain/jellyfish-json@4.0.5(defichain@4.0.5):
+    resolution: {integrity: sha512-MNYt9Jwj8n0e7zrmqlNTYB9glE3nr2eU6k9aLRKcpxw1YulUnl51Trs6DETQ7R0qSacRzyGWyKBAIXlLfaR7Vw==}
     peerDependencies:
-      defichain: ^4.0.1
+      defichain: ^4.0.5
     dependencies:
       '@types/lossless-json': 1.0.4
       bignumber.js: 9.1.2
-      defichain: 4.0.1
+      defichain: 4.0.5
       lossless-json: 1.0.5
     dev: false
 
@@ -5139,8 +5139,8 @@ packages:
     engines: {node: '>=10'}
     dev: false
 
-  /defichain@4.0.1:
-    resolution: {integrity: sha512-iuY+iA43I7XBkYTzV/31HlOJKK0oviS6S3BxPNThusfsU63BFnpK9AbopJpcuVkHXv2u4cHkEHjCodjnynT1ow==}
+  /defichain@4.0.5:
+    resolution: {integrity: sha512-sbB56Dm9YRLwIVJJsX7rdsIn8VNNWBm7DLxnZngmtJvh+MlBMsTllckotaz1tyZ7Yn3vr0u+uqgah2AliVGVrw==}
     engines: {node: '>=v16.17.0'}
     dev: false
 
