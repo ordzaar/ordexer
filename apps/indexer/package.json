@@ -20,7 +20,7 @@
   },
   "prettier": "@ordzaar/standard-prettier",
   "dependencies": {
-    "@defichain/jellyfish-json": "^4.0.1",
+    "@defichain/jellyfish-json": "^4.0.5",
     "@fastify/multipart": "^8.0.0",
     "@logtail/pino": "^0.4.17",
     "@nestjs/axios": "^3.0.1",
