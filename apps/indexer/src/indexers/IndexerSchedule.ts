@@ -35,38 +35,51 @@ export class IndexerTask {
   @Cron(CronExpression.EVERY_5_SECONDS)
   async checkForBlock() {
     if (this.indexing) return;
+    this.indexing = true;
     this.logger.log("check for block");
 
     // TODO set status reorging & outdated
-    // TODO reorg check
 
-    this.indexing = true;
-
-    let fromHeight = 0;
+    let indexerBlockHeight = -1;
     const indexerRow = await this.prisma.indexer.findFirst({
       where: {
         name: INDEXER_LAST_HEIGHT_KEY,
       },
     });
     if (indexerRow) {
-      fromHeight = indexerRow.block + 1;
+      indexerBlockHeight = indexerRow.block;
     }
 
-    const targetBlock = await this.bitcoinSvc.getBlockCount();
+    // check for reorg
+    if (indexerBlockHeight !== -1) {
+      const reorgBlockLength = this.configService.get<number>("indexer.reorgLength")!;
+      const lastHealthyBlockHeight = await this.indexerSvc.getReorgHeight(indexerBlockHeight, reorgBlockLength);
+      if (lastHealthyBlockHeight < indexerBlockHeight) {
+        this.logger.log("indexer is not healthy, need to perform reorg");
+        this.logger.log("performing reorg..");
+        await this.indexerSvc.performReorg(lastHealthyBlockHeight);
 
+        indexerBlockHeight = lastHealthyBlockHeight;
+      }
+    }
+    this.logger.log("indexer is healthy");
+
+    const targetBlockHeight = await this.bitcoinSvc.getBlockCount();
+    if (indexerBlockHeight >= targetBlockHeight) {
+      this.indexing = false;
+      return;
+    }
+
+    // indexing
+    this.logger.log("start indexing..");
     const indexOptions = {
       threshold: {
-        numBlocks: this.configService.get<number>("indexerThreshold.numBlocks")!,
-        numVins: this.configService.get<number>("indexerThreshold.numVins")!,
-        numVouts: this.configService.get<number>("indexerThreshold.numVouts")!,
+        numBlocks: this.configService.get<number>("indexer.threshold.numBlocks")!,
+        numVins: this.configService.get<number>("indexer.threshold.numVins")!,
+        numVouts: this.configService.get<number>("indexer.threshold.numVouts")!,
       },
     };
-
-    if (fromHeight < targetBlock) {
-      this.logger.log("start indexing");
-      await this.indexerSvc.index(fromHeight, targetBlock, indexOptions);
-    }
-
-    this.indexing = false;
+    const fromBlockHeight = indexerBlockHeight + 1;
+    await this.indexerSvc.index(fromBlockHeight, targetBlockHeight, indexOptions);
   }
 }

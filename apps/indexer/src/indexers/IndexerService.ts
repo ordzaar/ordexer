@@ -38,14 +38,14 @@ export class IndexerService {
     this.handlers.push(this.outputHndl, this.inscriptionHdl);
   }
 
-  async index(fromBlock: number, toBlock: number, options: IndexOptions) {
-    this.logger.log(`indexing from block ${fromBlock} to ${toBlock}`);
+  async index(fromBlockHeight: number, toBlockHeight: number, options: IndexOptions) {
+    this.logger.log(`indexing from block ${fromBlockHeight} to ${toBlockHeight}`);
 
-    let blockHeight = fromBlock;
+    let blockHeight = fromBlockHeight;
 
-    let blockhash = await this.bitcoinSvc.getBlockHash(fromBlock);
+    let blockhash = await this.bitcoinSvc.getBlockHash(fromBlockHeight);
 
-    while (blockhash !== undefined && blockHeight <= toBlock) {
+    while (blockhash && blockHeight <= toBlockHeight) {
       const readingBlockTs = perf();
       const block = await this.bitcoinSvc.getBlock(blockhash, 2);
       this.logger.log(`reading block: ${blockHeight}, took ${readingBlockTs.now}s`);
@@ -61,18 +61,57 @@ export class IndexerService {
       // Once we reach configured tresholds we commit the current vins and vouts
       // to the registered index handlers.
       if (this.hasReachedTreshold(blockHeight, options)) {
-        await this.commitVinVout(blockHeight - 1);
+        await this.commitVinVout(blockHeight);
       }
 
       blockHeight += 1;
       blockhash = block.nextblockhash;
     }
 
-    await this.commitVinVout(blockHeight - 1);
+    await this.commitVinVout(blockHeight);
   }
 
-  private hasReachedTreshold(blockheight: number, options: IndexOptions) {
-    if (blockheight !== 0 && blockheight % options.threshold.numBlocks === 0) {
+  async getReorgHeight(indexerBlockHeight: number, reorgBlockLength: number): Promise<number> {
+    const targetHeight = indexerBlockHeight - reorgBlockLength;
+
+    let currentBlockHeight = indexerBlockHeight;
+
+    while (currentBlockHeight > targetHeight) {
+      const block = await this.bitcoinSvc.getBlock(currentBlockHeight);
+      if (!block) {
+        currentBlockHeight -= 1;
+        // eslint-disable-next-line no-continue
+        continue;
+      }
+
+      const output = await this.prisma.output.findFirst({
+        where: {
+          voutBlockHeight: currentBlockHeight,
+        },
+      });
+      if (!output) {
+        currentBlockHeight -= 1;
+        // eslint-disable-next-line no-continue
+        continue;
+      }
+
+      // if the block hash is already match with current output hash then no need to check more
+      if (block.hash === output.voutBlockHash) {
+        return currentBlockHeight;
+      }
+
+      currentBlockHeight -= 1;
+      // eslint-disable-next-line no-continue
+      continue;
+    }
+
+    throw new Error(
+      `reorg block si more than the treshold, block is not healthy, please check it manually or increase the reorg threshold`,
+    );
+  }
+
+  private hasReachedTreshold(blockHeight: number, options: IndexOptions) {
+    if (blockHeight !== 0 && blockHeight % options.threshold.numBlocks === 0) {
       return true;
     }
     if (this.vins.length > options.threshold.numVins) {
@@ -158,13 +197,34 @@ export class IndexerService {
 
     const dbTxTs = perf();
     await this.prisma.$transaction(this.dbOperations);
-    this.logger.log(`executing db tx, took ${dbTxTs.now}s`);
+    this.logger.log(`executing commit db tx, took ${dbTxTs.now}s`);
 
     this.vins = [];
     this.vouts = [];
     this.dbOperations = [];
   }
 
-  // TODO
-  private performReorg() {}
+  async performReorg(lastHealthyBlockHeight: number) {
+    for (let i = 0; i < this.handlers.length; i += 1) {
+      const fromBlockHeight = lastHealthyBlockHeight + 1;
+      await this.handlers[i].reorg(fromBlockHeight, this.dbOperations);
+    }
+
+    this.dbOperations.push(
+      this.prisma.indexer.update({
+        where: {
+          name: INDEXER_LAST_HEIGHT_KEY,
+        },
+        data: {
+          block: lastHealthyBlockHeight,
+        },
+      }),
+    );
+
+    const dbTxTs = perf();
+    await this.prisma.$transaction(this.dbOperations);
+    this.logger.log(`executing reorg db tx, took ${dbTxTs.now}s`);
+
+    this.dbOperations = [];
+  }
 }

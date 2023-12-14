@@ -18,10 +18,13 @@ export function appConfig() {
       port: process.env.ORD_PORT,
     },
     voutPromiseLimiter: parseInt(process.env.VOUT_PROMISE_LIMITER ?? "1", 10),
-    indexerThreshold: {
-      numBlocks: parseInt(process.env.INDEXER_THRESHOLD_NUM_BLOCKS ?? "5000", 10),
-      numVins: parseInt(process.env.INDEXER_THRESHOLD_NUM_VINS ?? "250000", 10),
-      numVouts: parseInt(process.env.INDEXER_THRESHOLD_NUM_VOUTS ?? "250000", 10),
+    indexer: {
+      threshold: {
+        numBlocks: parseInt(process.env.INDEXER_THRESHOLD_NUM_BLOCKS ?? "5000", 10),
+        numVins: parseInt(process.env.INDEXER_THRESHOLD_NUM_VINS ?? "250000", 10),
+        numVouts: parseInt(process.env.INDEXER_THRESHOLD_NUM_VOUTS ?? "250000", 10),
+      },
+      reorgLength: parseInt(process.env.INDEXER_REORG_LENGTH ?? "10", 10),
     },
   };
 }
