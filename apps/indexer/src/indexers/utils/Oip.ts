@@ -1,5 +1,5 @@
+/* eslint-disable @typescript-eslint/ban-types */
 import { script } from "bitcoinjs-lib";
-
 
 const hasValidOip2Keys = makeObjectKeyChecker(["p", "v", "ty", "col", "iid", "publ", "nonce", "sig"]);
 
@@ -37,7 +37,7 @@ export function getMetaFromWitness(txinwitness: string[]): Object | undefined {
   let startIndex = -1;
   let endIndex = -1;
 
-  for (let i = 0; i < chunks.length; i++) {
+  for (let i = 0; i < chunks.length; i += 1) {
     if (chunks[i] === "application/json;charset=utf-8") {
       startIndex = i + 2; // skip the OP pushes after metadata mime-type itself
     } else if (chunks[i] === "104") {
@@ -57,7 +57,7 @@ export function getMetaFromWitness(txinwitness: string[]): Object | undefined {
         .join(""),
     );
   } catch (error) {
-		// TODO: Logging
+    // TODO: Logging
     // console.log("Error parsing json from witness", {
     //   error,
     //   chunks,
@@ -68,3 +68,56 @@ export function getMetaFromWitness(txinwitness: string[]): Object | undefined {
     return undefined;
   }
 }
+
+export async function validateOIP2Meta(meta?: any): Promise<boolean> {
+  if (meta === undefined || !isOIP2Meta(meta)) {
+    return false;
+  }
+  const origin = await db.inscriptions.findOne({
+    $or: [{ id: meta.col }, { id: meta.col.replace(":", "i") }, { id: `${meta.col}i0` }],
+  });
+  if (origin === undefined) {
+    return false;
+  }
+  const iid = origin.meta.insc.find((insc: any) => insc.iid === meta.iid);
+  if (iid === undefined || iid.limit < meta.nonce) {
+    return false;
+  }
+  const message = `${meta.col} ${meta.iid} ${meta.nonce}`;
+  try {
+    const valid = validateOrditSignature(message, meta.publ, meta.sig);
+    if (valid === true) {
+      return true;
+    }
+  } catch {
+    // ...
+  }
+  try {
+    const valid = validateCoreSignature(meta.publ, meta.sig, message);
+    if (valid === true) {
+      return true;
+    }
+  } catch {
+    // ...
+  }
+  return false;
+}
+
+export function isOIP2Meta(meta: any): meta is OIP2Meta {
+  const hasKeys = hasValidOip2Keys(meta);
+  if (hasKeys === false || meta.p !== "vord" || meta.v !== 1 || meta.ty !== "insc") {
+    return false;
+  }
+  return true;
+}
+
+export type OIP2Meta = {
+  p: "vord";
+  v: 1;
+  ty: "insc";
+  col: string;
+  iid: string;
+  publ: string;
+  nonce: number;
+  sig: string;
+};

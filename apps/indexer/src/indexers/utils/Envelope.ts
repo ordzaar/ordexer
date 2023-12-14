@@ -1,3 +1,4 @@
+/* eslint-disable consistent-return */
 import { script } from "bitcoinjs-lib";
 
 import { RawTransaction } from "../../bitcoin/BitcoinService";
@@ -18,85 +19,85 @@ const BODY_TAG = 0;
 type EnvelopeData = number | Buffer;
 
 export class Envelope {
-	readonly id: string;
+  readonly id: string;
 
-	readonly protocol?: string;
+  readonly protocol?: string;
 
-	readonly type?: string;
+  readonly type?: string;
 
-	readonly parent?: string;
+  readonly parent?: string;
 
-	readonly content?: {
-		size: number;
-		body: string;
-	};
+  readonly content?: {
+    size: number;
+    body: string;
+  };
 
-	readonly media: {
-		type: string;
-		charset: string;
-		mimeType: string;
-		mimeSubtype: string;
-	};
-	
-	readonly meta: object;
+  readonly media: {
+    type: string;
+    charset: string;
+    mimeType: string;
+    mimeSubtype: string;
+  };
 
-	constructor(
-		readonly txid: string,
-		readonly data: EnvelopeData[],
-		readonly oip?: object,
-	) {
-		this.id = `${txid}i0`;
-		this.protocol = getEnvelopeProtocol(data);
-		this.type = getEnvelopeType(data);
-		this.parent = getParent(data);
-		this.content = getEnvelopeContent(data);
-		this.media = getMediaMeta(this.type);
-		this.meta = getEnvelopeMeta(data) ?? {};
-	}
+  readonly meta: object;
 
-	/**
-	 * Return a inscription envelope from a transaction or undefined if no valid
-	 * envelope is present.
-	 *
-	 * @param tx - Raw bitcoin transaction to search for an inscription envelope
-	 */
-	static fromTransaction(tx: RawTransaction): Envelope | undefined {
-		const [data, oip] = getEnvelopeDataFromTx(tx) ?? [];
-		if (data) {
-			return new Envelope(tx.txid, data, oip);
-		}
-	}
+  constructor(
+    readonly txid: string,
+    readonly data: EnvelopeData[],
+    readonly oip?: object,
+  ) {
+    this.id = `${txid}i0`;
+    this.protocol = getEnvelopeProtocol(data);
+    this.type = getEnvelopeType(data);
+    this.parent = getParent(data);
+    this.content = getEnvelopeContent(data);
+    this.media = getMediaMeta(this.type);
+    this.meta = getEnvelopeMeta(data) ?? {};
+  }
 
-	static fromTxinWitness(txid: string, txinwitness: string[]): Envelope | undefined {
-		const [data, oip] = getEnvelopeFromTxinWitness(txinwitness) ?? [];
-		if (data) {
-			return new Envelope(txid, data, oip);
-		}
-	}
+  /**
+   * Return a inscription envelope from a transaction or undefined if no valid
+   * envelope is present.
+   *
+   * @param tx - Raw bitcoin transaction to search for an inscription envelope
+   */
+  static fromTransaction(tx: RawTransaction): Envelope | undefined {
+    const [data, oip] = getEnvelopeDataFromTx(tx) ?? [];
+    if (data) {
+      return new Envelope(tx.txid, data, oip);
+    }
+  }
 
-	get isValid() {
-		return this.protocol === "ord";
-	}
+  static fromTxinWitness(txid: string, txinwitness: string[]): Envelope | undefined {
+    const [data, oip] = getEnvelopeFromTxinWitness(txinwitness) ?? [];
+    if (data) {
+      return new Envelope(txid, data, oip);
+    }
+  }
 
-	get size() {
-		return this.content?.size ?? 0;
-	}
+  get isValid() {
+    return this.protocol === "ord";
+  }
 
-	get body() {
-		return this.content?.body ?? "";
-	}
+  get size() {
+    return this.content?.size ?? 0;
+  }
 
-	toJSON() {
-		return {
-			protocol: this.protocol,
-			type: this.type,
-			parent: this.parent,
-			size: this.size,
-			meta: this.meta,
-			oip: this.oip,
-			body: this.body,
-		};
-	}
+  get body() {
+    return this.content?.body ?? "";
+  }
+
+  toJSON() {
+    return {
+      protocol: this.protocol,
+      type: this.type,
+      parent: this.parent,
+      size: this.size,
+      meta: this.meta,
+      oip: this.oip,
+      body: this.body,
+    };
+  }
 }
 
 function getEnvelopeProtocol(data: EnvelopeData[]) {
@@ -181,10 +182,11 @@ function getEnvelopeMeta(data: EnvelopeData[]) {
  |--------------------------------------------------------------------------------
  */
 
- function getEnvelopeDataFromTx(tx: RawTransaction): [EnvelopeData[]?, any?] | undefined {
+function getEnvelopeDataFromTx(tx: RawTransaction): [EnvelopeData[]?, any?] | undefined {
   // eslint-disable-next-line no-restricted-syntax
   for (const vin of tx.vin) {
     if (isCoinbase(vin)) {
+      // eslint-disable-next-line no-continue
       continue;
     }
     if (vin.txinwitness) {
@@ -227,6 +229,7 @@ function getEnvelope(data: EnvelopeData[]): EnvelopeData[] | undefined {
     const started = startIndex !== -1;
     if (started === false && op === ENVELOPE_START_TAG) {
       startIndex = index;
+      // eslint-disable-next-line no-continue
       continue;
     }
     if (op === ENVELOPE_END_TAG) {

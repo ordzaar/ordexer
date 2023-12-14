@@ -11,9 +11,7 @@ datasource db {
 model Indexer {
   id    String @id @default(uuid())
   block Int
-  name  String
-
-  @@unique([name])
+  name  String @unique
 }
 
 model Output {
@@ -46,6 +44,7 @@ model Output {
 
 model Inscription {
   id                String                @id @default(uuid())
+  inscriptionId     String                @unique
   output            Output                @relation(fields: [outputId], references: [id])
   outputId          String
   creator           String
@@ -63,9 +62,12 @@ model Inscription {
   fee               Int
   genesis           String
   number            Int
+  sequence          Int
   outpoint          String
   ethereum          String
   verified          Boolean?
+  metadata          Json?
+  ometa             Json?
 
   @@index(height)
   @@index(number)
