@@ -38,7 +38,7 @@ export class IndexerTask {
     this.indexing = true;
     this.logger.log("check for block");
 
-    // TODO set status reorging & outdated
+    // TODO set status outdated
 
     let indexerBlockHeight = -1;
     const indexerRow = await this.prisma.indexer.findFirst({
@@ -52,6 +52,7 @@ export class IndexerTask {
 
     // check for reorg
     if (indexerBlockHeight !== -1) {
+      this.reorging = true;
       const reorgBlockLength = this.configService.get<number>("indexer.reorgLength")!;
       const lastHealthyBlockHeight = await this.indexerSvc.getReorgHeight(indexerBlockHeight, reorgBlockLength);
       if (lastHealthyBlockHeight < indexerBlockHeight) {
@@ -61,6 +62,7 @@ export class IndexerTask {
 
         indexerBlockHeight = lastHealthyBlockHeight;
       }
+      this.reorging = false;
     }
     this.logger.log("indexer is healthy");
 
