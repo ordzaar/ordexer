@@ -26,16 +26,16 @@ export class IndexerService {
 
   constructor(
     private readonly configService: ConfigService,
-    private bitcoinSvc: BitcoinService,
-    private inscriptionHdl: InscriptionHandler,
-    private outputHndl: OutputHandler,
+    private bitcoinService: BitcoinService,
+    private inscriptionHandler: InscriptionHandler,
+    private outputHandler: OutputHandler,
     private prisma: PrismaService,
   ) {
     this.registerHandlers();
   }
 
   private registerHandlers() {
-    this.handlers.push(this.outputHndl, this.inscriptionHdl);
+    this.handlers.push(this.outputHandler, this.inscriptionHandler);
   }
 
   async index(fromBlockHeight: number, toBlockHeight: number, options: IndexOptions) {
@@ -43,11 +43,11 @@ export class IndexerService {
 
     let blockHeight = fromBlockHeight;
 
-    let blockhash = await this.bitcoinSvc.getBlockHash(fromBlockHeight);
+    let blockhash = await this.bitcoinService.getBlockHash(fromBlockHeight);
 
     while (blockhash && blockHeight <= toBlockHeight) {
       const readingBlockTs = perf();
-      const block = await this.bitcoinSvc.getBlock(blockhash, 2);
+      const block = await this.bitcoinService.getBlock(blockhash, 2);
       this.logger.log(`reading block: ${blockHeight}, took ${readingBlockTs.now}s`);
 
       // ### Block
@@ -77,7 +77,7 @@ export class IndexerService {
     let currentBlockHeight = indexerBlockHeight;
 
     while (currentBlockHeight > targetHeight) {
-      const block = await this.bitcoinSvc.getBlock(currentBlockHeight);
+      const block = await this.bitcoinService.getBlock(currentBlockHeight);
       if (!block) {
         currentBlockHeight -= 1;
         // eslint-disable-next-line no-continue
@@ -149,7 +149,7 @@ export class IndexerService {
       }
 
       for (let j = 0; j < block.tx[i].vout.length; j += 1) {
-        voutsAddressPromisesLimiter.push(async () => this.bitcoinSvc.getAddressessFromVout(block.tx[i].vout[j]));
+        voutsAddressPromisesLimiter.push(async () => this.bitcoinService.getAddressessFromVout(block.tx[i].vout[j]));
 
         this.vouts.push({
           txid: block.tx[i].txid,

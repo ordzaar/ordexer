@@ -19,8 +19,8 @@ export class IndexerTask {
 
   constructor(
     private readonly configService: ConfigService,
-    private indexerSvc: IndexerService,
-    private bitcoinSvc: BitcoinService,
+    private indexerService: IndexerService,
+    private bitcoinService: BitcoinService,
     private prisma: PrismaService,
   ) {}
 
@@ -54,11 +54,11 @@ export class IndexerTask {
     if (indexerBlockHeight !== -1) {
       this.reorging = true;
       const reorgBlockLength = this.configService.get<number>("indexer.reorgLength")!;
-      const lastHealthyBlockHeight = await this.indexerSvc.getReorgHeight(indexerBlockHeight, reorgBlockLength);
+      const lastHealthyBlockHeight = await this.indexerService.getReorgHeight(indexerBlockHeight, reorgBlockLength);
       if (lastHealthyBlockHeight < indexerBlockHeight) {
         this.logger.log("indexer is not healthy, need to perform reorg");
         this.logger.log("performing reorg..");
-        await this.indexerSvc.performReorg(lastHealthyBlockHeight);
+        await this.indexerService.performReorg(lastHealthyBlockHeight);
 
         indexerBlockHeight = lastHealthyBlockHeight;
       }
@@ -66,7 +66,7 @@ export class IndexerTask {
     }
     this.logger.log("indexer is healthy");
 
-    const targetBlockHeight = await this.bitcoinSvc.getBlockCount();
+    const targetBlockHeight = await this.bitcoinService.getBlockCount();
     if (indexerBlockHeight >= targetBlockHeight) {
       this.indexing = false;
       return;
@@ -82,6 +82,6 @@ export class IndexerTask {
       },
     };
     const fromBlockHeight = indexerBlockHeight + 1;
-    await this.indexerSvc.index(fromBlockHeight, targetBlockHeight, indexOptions);
+    await this.indexerService.index(fromBlockHeight, targetBlockHeight, indexOptions);
   }
 }
