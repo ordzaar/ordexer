@@ -1,10 +1,16 @@
 /* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable consistent-return */
+import { ConfigService } from "@nestjs/config";
+
 import { RawTransaction } from "../../bitcoin/BitcoinService";
 import { OrdInscription } from "../../ord/providers/OrdProvider";
+import { PrismaService } from "../../PrismaService";
 import { VinData } from "../types";
 import { Envelope } from "./Envelope";
 import { parseLocation } from "./Transaction";
+
+const config = new ConfigService();
+const prisma = new PrismaService(config);
 
 export class Inscription {
   readonly id: string;
@@ -144,11 +150,25 @@ export async function getInscriptionFromEnvelope(
 }
 
 async function getInscriptionCreator(txid: string) {
-  const data = await db.outputs.findOne({ "vout.txid": txid, "vout.n": 0 });
+  const data = await prisma.output.findUnique({
+    where: {
+      voutTxid_voutTxIndex: {
+        voutTxid: txid,
+        voutTxIndex: 0,
+      },
+    },
+  });
   return data?.addresses[0] ?? "";
 }
 
 async function getInscriptionOwner(txid: string, n: number) {
-  const data = await db.outputs.findOne({ "vout.txid": txid, "vout.n": n });
+  const data = await prisma.output.findUnique({
+    where: {
+      voutTxid_voutTxIndex: {
+        voutTxid: txid,
+        voutTxIndex: n,
+      },
+    },
+  });
   return data?.addresses[0] ?? "";
 }

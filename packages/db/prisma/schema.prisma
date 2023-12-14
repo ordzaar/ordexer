@@ -66,7 +66,7 @@ model Inscription {
   outpoint          String
   ethereum          String
   verified          Boolean?
-  metadata          Json?
+  meta              Json?
   ometa             Json?
 
   @@index(height)
