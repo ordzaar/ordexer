@@ -26,53 +26,93 @@ export class IndexerService {
 
   constructor(
     private readonly configService: ConfigService,
-    private bitcoinSvc: BitcoinService,
-    private inscriptionHdl: InscriptionHandler,
-    private outputHndl: OutputHandler,
+    private bitcoinService: BitcoinService,
+    private inscriptionHandler: InscriptionHandler,
+    private outputHandler: OutputHandler,
     private prisma: PrismaService,
   ) {
     this.registerHandlers();
   }
 
   private registerHandlers() {
-    this.handlers.push(this.outputHndl, this.inscriptionHdl);
+    this.handlers.push(this.outputHandler, this.inscriptionHandler);
   }
 
-  async index(fromBlock: number, toBlock: number, options: IndexOptions) {
-    this.logger.log(`indexing from block ${fromBlock} to ${toBlock}`);
+  async indexBlock(fromBlockHeight: number, toBlockHeight: number, options: IndexOptions) {
+    this.logger.log(`[INDEXER|INDEX_BLOCK] indexing from block ${fromBlockHeight} to ${toBlockHeight}..`);
 
-    let blockHeight = fromBlock;
+    let blockHeight = fromBlockHeight;
 
-    let blockhash = await this.bitcoinSvc.getBlockHash(fromBlock);
+    let blockhash = await this.bitcoinService.getBlockHash(fromBlockHeight);
 
-    while (blockhash !== undefined && blockHeight <= toBlock) {
+    while (blockhash && blockHeight <= toBlockHeight) {
       const readingBlockTs = perf();
-      const block = await this.bitcoinSvc.getBlock(blockhash, 2);
-      this.logger.log(`reading block: ${blockHeight}, took ${readingBlockTs.now}s`);
+      const block = await this.bitcoinService.getBlock(blockhash, 2);
+      this.logger.log(`[INDEXER|INDEX_BLOCK] reading block: ${blockHeight}, took ${readingBlockTs.now} s`);
 
       // ### Block
       // Process the block and extract all the vin and vout information required
       // by subsequent index handlers.
       const handleBlockTs = perf();
       await this.handleBlock(block);
-      this.logger.log(`handling block: ${blockHeight}, took ${handleBlockTs.now}s`);
+      this.logger.log(`[INDEXER|INDEX_BLOCK] handling block: ${blockHeight}, took ${handleBlockTs.now} s`);
 
       // ### Commit
-      // Once we reach configured tresholds we commit the current vins and vouts
+      // Once we reach configured thresholds we commit the current vins and vouts
       // to the registered index handlers.
-      if (this.hasReachedTreshold(blockHeight, options)) {
-        await this.commitVinVout(blockHeight - 1);
+      if (this.hasReachedThreshold(blockHeight, options)) {
+        await this.commitVinVout(blockHeight);
       }
 
       blockHeight += 1;
       blockhash = block.nextblockhash;
     }
 
-    await this.commitVinVout(blockHeight - 1);
+    await this.commitVinVout(blockHeight);
   }
 
-  private hasReachedTreshold(blockheight: number, options: IndexOptions) {
-    if (blockheight !== 0 && blockheight % options.threshold.numBlocks === 0) {
+  async getReorgHeight(indexerBlockHeight: number, reorgBlockLength: number): Promise<number> {
+    const targetHeight = indexerBlockHeight - reorgBlockLength;
+
+    let currentBlockHeight = indexerBlockHeight;
+
+    while (currentBlockHeight > targetHeight) {
+      const block = await this.bitcoinService.getBlock(currentBlockHeight);
+      if (!block) {
+        currentBlockHeight -= 1;
+        // eslint-disable-next-line no-continue
+        continue;
+      }
+
+      const output = await this.prisma.output.findFirst({
+        where: {
+          voutBlockHeight: currentBlockHeight,
+        },
+      });
+      if (!output) {
+        currentBlockHeight -= 1;
+        // eslint-disable-next-line no-continue
+        continue;
+      }
+
+      // if the block hash is already match with current output hash then no need to check more
+      if (block.hash === output.voutBlockHash) {
+        return currentBlockHeight;
+      }
+
+      currentBlockHeight -= 1;
+      // eslint-disable-next-line no-continue
+      continue;
+    }
+
+    const msg =
+      "[INDEXER|REORG_HEIGHT] reorg block value si more than the threshold, block is not healthy, please check it manually or increase the reorg threshold";
+    this.logger.log(msg);
+    throw new Error(msg);
+  }
+
+  private hasReachedThreshold(blockHeight: number, options: IndexOptions) {
+    if (blockHeight !== 0 && blockHeight % options.threshold.numBlocks === 0) {
       return true;
     }
     if (this.vins.length > options.threshold.numVins) {
@@ -110,7 +150,7 @@ export class IndexerService {
       }
 
       for (let j = 0; j < block.tx[i].vout.length; j += 1) {
-        voutsAddressPromisesLimiter.push(async () => this.bitcoinSvc.getAddressessFromVout(block.tx[i].vout[j]));
+        voutsAddressPromisesLimiter.push(async () => this.bitcoinService.getAddressessFromVout(block.tx[i].vout[j]));
 
         this.vouts.push({
           txid: block.tx[i].txid,
@@ -135,7 +175,7 @@ export class IndexerService {
   }
 
   private async commitVinVout(lastBlockHeight: number) {
-    this.logger.log(`commiting block: ${lastBlockHeight}`);
+    this.logger.log(`[INDEXER|COMMIT] commiting block: ${lastBlockHeight}..`);
 
     for (let i = 0; i < this.handlers.length; i += 1) {
       await this.handlers[i].commit(lastBlockHeight, this.vins, this.vouts, this.dbOperations);
@@ -158,13 +198,34 @@ export class IndexerService {
 
     const dbTxTs = perf();
     await this.prisma.$transaction(this.dbOperations);
-    this.logger.log(`executing db tx, took ${dbTxTs.now}s`);
+    this.logger.log(`[INDEXER|COMMIT] executing commit db tx, took ${dbTxTs.now} s`);
 
     this.vins = [];
     this.vouts = [];
     this.dbOperations = [];
   }
 
-  // TODO
-  private performReorg() {}
+  async performReorg(lastHealthyBlockHeight: number) {
+    for (let i = 0; i < this.handlers.length; i += 1) {
+      const fromBlockHeight = lastHealthyBlockHeight + 1;
+      await this.handlers[i].reorg(fromBlockHeight, this.dbOperations);
+    }
+
+    this.dbOperations.push(
+      this.prisma.indexer.update({
+        where: {
+          name: INDEXER_LAST_HEIGHT_KEY,
+        },
+        data: {
+          block: lastHealthyBlockHeight,
+        },
+      }),
+    );
+
+    const dbTxTs = perf();
+    await this.prisma.$transaction(this.dbOperations);
+    this.logger.log(`[INDEXER|REORG] executing reorg db tx, took ${dbTxTs.now} s`);
+
+    this.dbOperations = [];
+  }
 }

@@ -29,7 +29,7 @@ export class InscriptionHandler extends BaseIndexerHandler {
       return;
     }
 
-    this.logger.log("commiting insription");
+    this.logger.log("[INSCRIPTION_HANDLER|COMMIT] commiting insription..");
 
     await this.ord.waitForBlock(height);
 
