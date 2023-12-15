@@ -23,7 +23,10 @@ export class OrdProvider {
       requestOptions.headers["Content-Type"] = "application/json";
     }
 
-    const response = await fetch(`${this.configService.get<string>("ordUri")}${path}`, requestOptions);
+    const response = await fetch(
+      `${this.configService.get<string>("ord.uri")}:${this.configService.get<string>("ord.port")}${path}`,
+      requestOptions,
+    );
 
     if (response.status !== 200) {
       throw new Error(`ORD request failed with status ${response.status}`);

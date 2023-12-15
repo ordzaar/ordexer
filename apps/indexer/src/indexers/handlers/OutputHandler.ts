@@ -8,17 +8,14 @@ import { BaseIndexerHandler } from "./BaseHandler";
 
 @Injectable()
 export class OutputHandler extends BaseIndexerHandler {
-
   private readonly logger: Logger;
 
-  constructor(
-    private prisma: PrismaService,
-  ) {
+  constructor(private prisma: PrismaService) {
     super();
     this.logger = new Logger(OutputHandler.name);
   }
 
-  async commit(vins: VinData[], vouts: VoutData[], dbOperations: PrismaPromise<any>[]): Promise<void> {
+  async commit(height: number, vins: VinData[], vouts: VoutData[], dbOperations: PrismaPromise<any>[]): Promise<void> {
     this.logger.log("commiting output");
 
     const outputs: VoutRow[] = [];
@@ -33,13 +30,15 @@ export class OutputHandler extends BaseIndexerHandler {
         voutBlockHeight: vout.block.height,
         voutTxid: vout.txid,
         voutTxIndex: vout.n,
-      })
+      });
     }
 
-    dbOperations.push(this.prisma.output.createMany({
-      data: outputs,
-      skipDuplicates: true,
-    }));
+    dbOperations.push(
+      this.prisma.output.createMany({
+        data: outputs,
+        skipDuplicates: true,
+      }),
+    );
 
     // eslint-disable-next-line no-restricted-syntax
     for (const vin of vins) {
@@ -57,21 +56,23 @@ export class OutputHandler extends BaseIndexerHandler {
             vinBlockHeight: vin.block.height,
             vinTxid: vin.txid,
             vinTxIndex: vin.n,
-          }
-        })
+          },
+        }),
       );
-    };
+    }
   }
 
   async reorg(fromHeight: number, dbOperations: PrismaPromise<any>[]): Promise<void> {
     this.logger.log(`reorging output from height ${fromHeight}`);
-    dbOperations.push(this.prisma.output.deleteMany({
-      where: {
-        voutBlockHeight: {
-          gte: fromHeight,
+    dbOperations.push(
+      this.prisma.output.deleteMany({
+        where: {
+          voutBlockHeight: {
+            gte: fromHeight,
+          },
         },
-      },
-    }));
+      }),
+    );
     // TODO: update spent outputs
   }
 }
@@ -84,4 +85,4 @@ type VoutRow = {
   voutBlockHeight: number;
   voutTxid: string;
   voutTxIndex: number;
-}
+};

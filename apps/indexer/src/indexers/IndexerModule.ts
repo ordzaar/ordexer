@@ -1,6 +1,7 @@
 import { Module } from "@nestjs/common";
-import { BitcoinModule } from "src/bitcoin/BitcoinModule";
 
+import { BitcoinModule } from "../bitcoin/BitcoinModule";
+import { OrdModule } from "../ord/OrdModule";
 import { PrismaService } from "../PrismaService";
 import { InscriptionHandler } from "./handlers/InscriptionsHandler";
 import { OutputHandler } from "./handlers/OutputHandler";
@@ -8,7 +9,7 @@ import { IndexerTask } from "./IndexerSchedule";
 import { IndexerService } from "./IndexerService";
 
 @Module({
-  imports: [BitcoinModule],
+  imports: [BitcoinModule, OrdModule],
   providers: [IndexerTask, IndexerService, InscriptionHandler, OutputHandler, PrismaService],
   exports: [],
 })
