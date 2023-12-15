@@ -241,6 +241,9 @@ importers:
       '@ordzaar/standard-typescript':
         specifier: ^0.4.11
         version: 0.4.11(typescript@5.2.2)
+      '@types/big.js':
+        specifier: ^6.2.2
+        version: 6.2.2
       '@types/express':
         specifier: ^4.17.21
         version: 4.17.21
@@ -3199,6 +3202,10 @@ packages:
     resolution: {integrity: sha512-mSM/iKUk5fDDrEV/e83qY+Cr3I1+Q3qqTuEn++HAWYjEa1+NxZr6CNrcJGf2ZTnq4HoFGC3zaTPZTobCzCFukA==}
     dependencies:
       '@babel/types': 7.23.4
+    dev: true
+
+  /@types/big.js@6.2.2:
+    resolution: {integrity: sha512-e2cOW9YlVzFY2iScnGBBkplKsrn2CsObHQ2Hiw4V1sSyiGbgWL8IyqE3zFi1Pt5o1pdAtYkDAIsF3KKUPjdzaA==}
     dev: true
 
   /@types/body-parser@1.19.5:

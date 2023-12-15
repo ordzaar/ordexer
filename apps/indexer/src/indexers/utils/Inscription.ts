@@ -1,16 +1,11 @@
 /* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable consistent-return */
-import { ConfigService } from "@nestjs/config";
-
 import { RawTransaction } from "../../bitcoin/BitcoinService";
 import { OrdInscription } from "../../ord/providers/OrdProvider";
 import { PrismaService } from "../../PrismaService";
 import { VinData } from "../types";
 import { Envelope } from "./Envelope";
 import { parseLocation } from "./Transaction";
-
-const config = new ConfigService();
-const prisma = new PrismaService(config);
 
 export class Inscription {
   readonly id: string;
@@ -110,6 +105,7 @@ type InscriptionMedia = {
 };
 
 export async function getInscriptionFromEnvelope(
+  prisma: PrismaService,
   envelope: Envelope,
   ord: Map<string, OrdInscription>,
 ): Promise<Inscription | undefined> {
@@ -125,8 +121,8 @@ export async function getInscriptionFromEnvelope(
     parent: envelope.parent,
     children: [],
     genesis: envelope.txid,
-    creator: await getInscriptionCreator(envelope.txid),
-    owner: await getInscriptionOwner(locationTxid, locationN),
+    creator: await getInscriptionCreator(prisma, envelope.txid),
+    owner: await getInscriptionOwner(prisma, locationTxid, locationN),
     media: {
       type: envelope.media.type ?? "",
       charset: envelope.media.charset,
@@ -149,7 +145,7 @@ export async function getInscriptionFromEnvelope(
   });
 }
 
-async function getInscriptionCreator(txid: string) {
+async function getInscriptionCreator(prisma: PrismaService, txid: string) {
   const data = await prisma.output.findUnique({
     where: {
       voutTxid_voutTxIndex: {
@@ -161,7 +157,7 @@ async function getInscriptionCreator(txid: string) {
   return data?.addresses[0] ?? "";
 }
 
-async function getInscriptionOwner(txid: string, n: number) {
+async function getInscriptionOwner(prisma: PrismaService, txid: string, n: number) {
   const data = await prisma.output.findUnique({
     where: {
       voutTxid_voutTxIndex: {

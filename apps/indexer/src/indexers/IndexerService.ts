@@ -178,7 +178,7 @@ export class IndexerService {
     this.logger.log(`[INDEXER|COMMIT] commiting block: ${lastBlockHeight}..`);
 
     for (let i = 0; i < this.handlers.length; i += 1) {
-      await this.handlers[i].commit(this.vins, this.vouts, this.dbOperations);
+      await this.handlers[i].commit(lastBlockHeight, this.vins, this.vouts, this.dbOperations);
     }
 
     this.dbOperations.push(

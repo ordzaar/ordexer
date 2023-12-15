@@ -1,12 +1,8 @@
 /* eslint-disable @typescript-eslint/ban-types */
-import { ConfigService } from "@nestjs/config";
 import { script } from "bitcoinjs-lib";
 
 import { PrismaService } from "../../PrismaService";
 import { validateCoreSignature, validateOrditSignature } from "./Signatures";
-
-const config = new ConfigService();
-const prisma = new PrismaService(config);
 
 const hasValidOip2Keys = makeObjectKeyChecker(["p", "v", "ty", "col", "iid", "publ", "nonce", "sig"]);
 
@@ -76,7 +72,7 @@ export function getMetaFromWitness(txinwitness: string[]): Object | undefined {
   }
 }
 
-export async function validateOIP2Meta(meta?: any): Promise<boolean> {
+export async function validateOIP2Meta(prisma: PrismaService, meta?: any): Promise<boolean> {
   if (meta === undefined || !isOIP2Meta(meta)) {
     return false;
   }
@@ -92,7 +88,7 @@ export async function validateOIP2Meta(meta?: any): Promise<boolean> {
   if (origin === null || origin.meta === null) {
     return false;
   }
-  const iid = origin.meta.insc.find((insc: any) => insc.iid === meta.iid);
+  const iid = (origin.meta as any).insc.find((insc: any) => insc.iid === meta.iid);
   if (iid === undefined || iid.limit < meta.nonce) {
     return false;
   }

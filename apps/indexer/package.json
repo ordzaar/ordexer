@@ -54,6 +54,7 @@
   "devDependencies": {
     "@ordzaar/standard-prettier": "^0.4.11",
     "@ordzaar/standard-typescript": "^0.4.11",
+    "@types/big.js": "^6.2.2",
     "@types/express": "^4.17.21",
     "@types/multer": "^1.4.11",
     "@types/node": "^20.10.0",

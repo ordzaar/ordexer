@@ -15,7 +15,7 @@ export class OutputHandler extends BaseIndexerHandler {
     this.logger = new Logger(OutputHandler.name);
   }
 
-  async commit(vins: VinData[], vouts: VoutData[], dbOperations: PrismaPromise<any>[]): Promise<void> {
+  async commit(height: number, vins: VinData[], vouts: VoutData[], dbOperations: PrismaPromise<any>[]): Promise<void> {
     this.logger.log("[OUTPUT_HANDLER|COMMIT] commiting output..");
 
     const outputs: VoutRow[] = [];

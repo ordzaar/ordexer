@@ -6,6 +6,7 @@ import { PrismaService } from "../../PrismaService";
 import { VinData, VoutData } from "../types";
 import { Envelope } from "../utils/Envelope";
 import { getInscriptionFromEnvelope, Inscription as RawInscription } from "../utils/Inscription";
+import { INSCRIPTION_EPOCH_BLOCK } from "../utils/Network";
 import { isOIP2Meta, validateOIP2Meta } from "../utils/Oip";
 import { parseLocation } from "../utils/Transaction";
 import { BaseIndexerHandler } from "./BaseHandler";
@@ -22,11 +23,13 @@ export class InscriptionHandler extends BaseIndexerHandler {
     this.logger = new Logger(InscriptionHandler.name);
   }
 
-  // eslint-disable-next-line
-  async commit(vins: VinData[], vouts: VoutData[], dbOperations: PrismaPromise<any>[]): Promise<void> {
-    this.logger.log("[INSCRIPTION_HANDLER|COMMIT] commiting insription..");
+  async commit(height: number, vins: VinData[], vouts: VoutData[], dbOperations: PrismaPromise<any>[]): Promise<void> {
+    if (height < INSCRIPTION_EPOCH_BLOCK) {
+      this.logger.log("inscriptions indexer has not passed epoch block");
+      return;
+    }
 
-    const { height } = vins[vins.length - 1].block;
+    this.logger.log("[INSCRIPTION_HANDLER|COMMIT] commiting insription..");
 
     await this.ord.waitForBlock(height);
 
@@ -76,7 +79,7 @@ export class InscriptionHandler extends BaseIndexerHandler {
     const inscriptions: RawInscription[] = [];
     // eslint-disable-next-line no-restricted-syntax
     for (const envelope of envelopes) {
-      const inscription = await getInscriptionFromEnvelope(envelope, ordData);
+      const inscription = await getInscriptionFromEnvelope(this.prisma, envelope, ordData);
       if (inscription !== undefined) {
         inscriptions.push(inscription);
       }
@@ -120,7 +123,7 @@ export class InscriptionHandler extends BaseIndexerHandler {
       if (inscription.oip) {
         entry.meta = inscription.oip;
         if (isOIP2Meta(inscription.oip)) {
-          entry.verified = await validateOIP2Meta(inscription.oip);
+          entry.verified = await validateOIP2Meta(this.prisma, inscription.oip);
         }
       }
 

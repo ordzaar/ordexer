@@ -1,8 +1,7 @@
-import { ConfigService } from "@nestjs/config";
 import { networks } from "bitcoinjs-lib";
+import * as process from "process";
 
-const config = new ConfigService();
-const network = config.get<string>("bitcoin.network")!;
+const network = process.env.NETWORK;
 
 export function getBitcoinNetwork(): networks.Network {
   switch (network) {
@@ -16,3 +15,7 @@ export function getBitcoinNetwork(): networks.Network {
       throw new Error(`invalid bitcoin network: ${network}`);
   }
 }
+
+export const INSCRIPTION_EPOCH_BLOCK =
+  // eslint-disable-next-line no-nested-ternary
+  network === "mainnet" ? 767_429 : network === "testnet" ? 2_413_342 : 0;
