@@ -177,24 +177,29 @@ export class IndexerService {
     this.logger.log(`[INDEXER|COMMIT] total vouts: ${this.vouts.length}`);
 
     const dbTxTs = perf();
-    await this.prisma.$transaction(async (prismaTx) => {
-      for (let i = 0; i < this.handlers.length; i += 1) {
-        await this.handlers[i].commit(lastBlockHeight, this.vins, this.vouts, prismaTx);
-      }
+    await this.prisma.$transaction(
+      async (prismaTx) => {
+        for (let i = 0; i < this.handlers.length; i += 1) {
+          await this.handlers[i].commit(lastBlockHeight, this.vins, this.vouts, prismaTx);
+        }
 
-      await prismaTx.indexer.upsert({
-        where: {
-          name: INDEXER_LAST_HEIGHT_KEY,
-        },
-        update: {
-          block: lastBlockHeight,
-        },
-        create: {
-          name: INDEXER_LAST_HEIGHT_KEY,
-          block: lastBlockHeight,
-        },
-      });
-    });
+        await prismaTx.indexer.upsert({
+          where: {
+            name: INDEXER_LAST_HEIGHT_KEY,
+          },
+          update: {
+            block: lastBlockHeight,
+          },
+          create: {
+            name: INDEXER_LAST_HEIGHT_KEY,
+            block: lastBlockHeight,
+          },
+        });
+      },
+      {
+        timeout: 1000 * 60 * 10, // 10 minutes
+      },
+    );
     this.logger.log(`[INDEXER|COMMIT] executing commit data, took ${dbTxTs.now} s`);
 
     this.vins = [];
@@ -203,21 +208,26 @@ export class IndexerService {
 
   async performReorg(lastHealthyBlockHeight: number) {
     const dbTxTs = perf();
-    await this.prisma.$transaction(async (prismaTx) => {
-      for (let i = 0; i < this.handlers.length; i += 1) {
-        const fromBlockHeight = lastHealthyBlockHeight + 1;
-        await this.handlers[i].reorg(fromBlockHeight, prismaTx);
-      }
+    await this.prisma.$transaction(
+      async (prismaTx) => {
+        for (let i = 0; i < this.handlers.length; i += 1) {
+          const fromBlockHeight = lastHealthyBlockHeight + 1;
+          await this.handlers[i].reorg(fromBlockHeight, prismaTx);
+        }
 
-      await prismaTx.indexer.update({
-        where: {
-          name: INDEXER_LAST_HEIGHT_KEY,
-        },
-        data: {
-          block: lastHealthyBlockHeight,
-        },
-      });
-    });
+        await prismaTx.indexer.update({
+          where: {
+            name: INDEXER_LAST_HEIGHT_KEY,
+          },
+          data: {
+            block: lastHealthyBlockHeight,
+          },
+        });
+      },
+      {
+        timeout: 1000 * 60 * 10, // 10 minutes
+      },
+    );
     this.logger.log(`[INDEXER|REORG] executing reorg, took ${dbTxTs.now} s`);
   }
 }
