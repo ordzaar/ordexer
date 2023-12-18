@@ -2,6 +2,7 @@ import { Injectable, Logger } from "@nestjs/common";
 import { PrismaClient } from "@prisma/client";
 import { ITXClientDenyList, Omit } from "@prisma/client/runtime/library";
 import { ScriptPubKey } from "src/bitcoin/BitcoinService";
+import { perf } from "src/utils/Log";
 
 import { VinData, VoutData } from "../types";
 import { BaseIndexerHandler } from "./BaseHandler";
@@ -36,11 +37,16 @@ export class OutputHandler extends BaseIndexerHandler {
       });
     }
 
+    const insertingOutputsTs = perf();
     await prismaTx.output.createMany({
       data: outputs,
       skipDuplicates: true,
     });
+    this.logger.log(
+      `[OUTPUT_HANDLER|COMMIT] inserting ${outputs.length} data to output tx, took ${insertingOutputsTs.now} s`,
+    );
 
+    const updatingOutputsTs = perf();
     // TODO optimize using concurency when updating output
     for (let i = 0; i < vins.length; i += 1) {
       await prismaTx.output.update({
@@ -59,6 +65,9 @@ export class OutputHandler extends BaseIndexerHandler {
         },
       });
     }
+    this.logger.log(
+      `[OUTPUT_HANDLER|COMMIT] updating ${vins.length} data to output tx, took ${updatingOutputsTs.now} s`,
+    );
   }
 
   async reorg(fromHeight: number, prismaTx: Omit<PrismaClient, ITXClientDenyList>): Promise<void> {
