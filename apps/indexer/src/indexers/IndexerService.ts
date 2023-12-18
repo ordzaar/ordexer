@@ -176,6 +176,7 @@ export class IndexerService {
 
   private async commitVinVout(lastBlockHeight: number) {
     this.logger.log(`[INDEXER|COMMIT] commiting block: ${lastBlockHeight}..`);
+    this.logger.log(`[INDEXER|INDEX_BLOCK] indexing ${this.vins.length} vins and ${this.vouts.length} vouts..`);
 
     for (let i = 0; i < this.handlers.length; i += 1) {
       await this.handlers[i].commit(lastBlockHeight, this.vins, this.vouts, this.dbOperations);
@@ -198,7 +199,9 @@ export class IndexerService {
 
     const dbTxTs = perf();
     await this.prisma.$transaction(this.dbOperations);
-    this.logger.log(`[INDEXER|COMMIT] executing commit db tx, took ${dbTxTs.now} s`);
+    this.logger.log(
+      `[INDEXER|COMMIT] executing commit db tx, commited ${this.dbOperations.length} transactions in ${dbTxTs.now} s`,
+    );
 
     this.vins = [];
     this.vouts = [];

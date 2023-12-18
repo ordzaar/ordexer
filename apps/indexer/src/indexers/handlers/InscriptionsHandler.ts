@@ -24,8 +24,10 @@ export class InscriptionHandler extends BaseIndexerHandler {
   }
 
   async commit(height: number, vins: VinData[], vouts: VoutData[], dbOperations: PrismaPromise<any>[]): Promise<void> {
-    if (height < INSCRIPTION_EPOCH_BLOCK) {
-      this.logger.log("inscriptions indexer has not passed epoch block");
+    this.logger.log(`[INSCRIPTION_HANDLER|CHECK] Height:${height} Inscription Epoch Block:${INSCRIPTION_EPOCH_BLOCK}`);
+
+    if (height < 2_413_342) {
+      this.logger.log("[INSCRIPTION_HANDLER|COMMIT] inscriptions indexer has not passed epoch block");
       return;
     }
 
