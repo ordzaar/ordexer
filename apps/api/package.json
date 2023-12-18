@@ -25,6 +25,7 @@
     "@logtail/pino": "^0.4.17",
     "@nestjs/axios": "^3.0.1",
     "@ordzaar/ordexer-db": "workspace:*",
+    "@ordzaar/rpcservices": "workspace:*",
     "@ordzaar/standard-api-fastify": "^0.4.11",
     "@prisma/client": "^5.7.1",
     "@types/uuid": "^9.0.7",
