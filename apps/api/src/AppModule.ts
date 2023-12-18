@@ -3,11 +3,14 @@ import { ConfigModule } from "@nestjs/config";
 import { APP_GUARD, APP_INTERCEPTOR } from "@nestjs/core";
 import { ThrottlerGuard } from "@nestjs/throttler";
 
+import { AddressModule } from "./address/AddressModule";
 import { appConfig, ENV_VALIDATION_SCHEMA } from "./AppConfig";
 import { CustomCacheInterceptor } from "./interceptors/CustomCacheInterceptor";
 import { CustomCacheModule } from "./modules/CustomCacheModule";
 import { CustomThrottlerModule } from "./modules/CustomThrottlerModule";
 import { HealthModule } from "./modules/HealthModule";
+import { OrdinalsModule } from "./ordinals/OrdinalsModule";
+import { TransactionsModule } from "./transactions/TransactionsModule";
 import { VersionModule } from "./version/VersionModule";
 
 @Module({
@@ -21,6 +24,9 @@ import { VersionModule } from "./version/VersionModule";
     CustomThrottlerModule,
     HealthModule,
     VersionModule,
+    AddressModule,
+    OrdinalsModule,
+    TransactionsModule,
   ],
   controllers: [],
   providers: [
