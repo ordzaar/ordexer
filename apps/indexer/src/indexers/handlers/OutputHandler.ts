@@ -1,8 +1,8 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { PrismaPromise } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
+import { ITXClientDenyList, Omit } from "@prisma/client/runtime/library";
 import { ScriptPubKey } from "src/bitcoin/BitcoinService";
 
-import { PrismaService } from "../../PrismaService";
 import { VinData, VoutData } from "../types";
 import { BaseIndexerHandler } from "./BaseHandler";
 
@@ -10,69 +10,66 @@ import { BaseIndexerHandler } from "./BaseHandler";
 export class OutputHandler extends BaseIndexerHandler {
   private readonly logger: Logger;
 
-  constructor(private prisma: PrismaService) {
+  constructor() {
     super();
     this.logger = new Logger(OutputHandler.name);
   }
 
-  async commit(height: number, vins: VinData[], vouts: VoutData[], dbOperations: PrismaPromise<any>[]): Promise<void> {
+  async commit(
+    _: number,
+    vins: VinData[],
+    vouts: VoutData[],
+    prismaTx: Omit<PrismaClient, ITXClientDenyList>,
+  ): Promise<void> {
     this.logger.log("[OUTPUT_HANDLER|COMMIT] commiting output..");
 
     const outputs: VoutRow[] = [];
-
-    // eslint-disable-next-line no-restricted-syntax
-    for (const vout of vouts) {
+    for (let i = 0; i < vouts.length; i += 1) {
       outputs.push({
-        addresses: vout.addresses,
-        value: vout.value,
-        scriptPubKey: vout.scriptPubKey,
-        voutBlockHash: vout.block.hash,
-        voutBlockHeight: vout.block.height,
-        voutTxid: vout.txid,
-        voutTxIndex: vout.n,
+        addresses: vouts[i].addresses,
+        value: vouts[i].value,
+        scriptPubKey: vouts[i].scriptPubKey,
+        voutBlockHash: vouts[i].block.hash,
+        voutBlockHeight: vouts[i].block.height,
+        voutTxid: vouts[i].txid,
+        voutTxIndex: vouts[i].n,
       });
     }
 
-    dbOperations.push(
-      this.prisma.output.createMany({
-        data: outputs,
-        skipDuplicates: true,
-      }),
-    );
+    await prismaTx.output.createMany({
+      data: outputs,
+      skipDuplicates: true,
+    });
 
-    // eslint-disable-next-line no-restricted-syntax
-    for (const vin of vins) {
-      dbOperations.push(
-        this.prisma.output.update({
-          where: {
-            voutTxid_voutTxIndex: {
-              voutTxid: vin.vout.txid,
-              voutTxIndex: vin.vout.n,
-            },
+    // TODO optimize using concurency when updating output
+    for (let i = 0; i < vins.length; i += 1) {
+      await prismaTx.output.update({
+        where: {
+          voutTxid_voutTxIndex: {
+            voutTxid: vins[i].vout.txid,
+            voutTxIndex: vins[i].vout.n,
           },
-          data: {
-            spent: true,
-            vinBlockHash: vin.block.hash,
-            vinBlockHeight: vin.block.height,
-            vinTxid: vin.txid,
-            vinTxIndex: vin.n,
-          },
-        }),
-      );
+        },
+        data: {
+          spent: true,
+          vinBlockHash: vins[i].block.hash,
+          vinBlockHeight: vins[i].block.height,
+          vinTxid: vins[i].txid,
+          vinTxIndex: vins[i].n,
+        },
+      });
     }
   }
 
-  async reorg(fromHeight: number, dbOperations: PrismaPromise<any>[]): Promise<void> {
+  async reorg(fromHeight: number, prismaTx: Omit<PrismaClient, ITXClientDenyList>): Promise<void> {
     this.logger.log(`[OUTPUT_HANDLER|REORG] reorging output from height ${fromHeight}..`);
-    dbOperations.push(
-      this.prisma.output.deleteMany({
-        where: {
-          voutBlockHeight: {
-            gte: fromHeight,
-          },
+    await prismaTx.output.deleteMany({
+      where: {
+        voutBlockHeight: {
+          gte: fromHeight,
         },
-      }),
-    );
+      },
+    });
     // TODO: update spent outputs
   }
 }

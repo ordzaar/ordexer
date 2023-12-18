@@ -1,8 +1,8 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { PrismaPromise } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
+import { ITXClientDenyList, Omit } from "@prisma/client/runtime/library";
 
 import { OrdInscription, OrdProvider } from "../../ord/providers/OrdProvider";
-import { PrismaService } from "../../PrismaService";
 import { VinData, VoutData } from "../types";
 import { Envelope } from "../utils/Envelope";
 import { getInscriptionFromEnvelope, Inscription as RawInscription } from "../utils/Inscription";
@@ -15,47 +15,47 @@ import { BaseIndexerHandler } from "./BaseHandler";
 export class InscriptionHandler extends BaseIndexerHandler {
   private readonly logger: Logger;
 
-  constructor(
-    private prisma: PrismaService,
-    private ord: OrdProvider,
-  ) {
+  constructor(private ord: OrdProvider) {
     super();
     this.logger = new Logger(InscriptionHandler.name);
   }
 
-  async commit(height: number, vins: VinData[], vouts: VoutData[], dbOperations: PrismaPromise<any>[]): Promise<void> {
-    if (height < INSCRIPTION_EPOCH_BLOCK) {
+  async commit(
+    lastBlockHeight: number,
+    vins: VinData[],
+    _: VoutData[],
+    prismaTx: Omit<PrismaClient, ITXClientDenyList>,
+  ): Promise<void> {
+    if (lastBlockHeight < INSCRIPTION_EPOCH_BLOCK) {
       this.logger.log("inscriptions indexer has not passed epoch block");
       return;
     }
 
     this.logger.log("[INSCRIPTION_HANDLER|COMMIT] commiting insription..");
 
-    await this.ord.waitForBlock(height);
+    await this.ord.waitForBlock(lastBlockHeight);
 
-    const inscriptions = await this.getInscriptions(vins);
+    const inscriptions = await this.getInscriptions(vins, prismaTx);
 
-    await this.insertInscriptions(inscriptions, dbOperations);
+    await this.insertInscriptions(inscriptions, prismaTx);
 
     await this.transferInscriptions(
       vins.map(({ vout }) => `${vout.txid}:${vout.n}`),
-      dbOperations,
+      prismaTx,
     );
   }
 
-  async reorg(fromHeight: number, dbOperations: PrismaPromise<any>[]): Promise<void> {
-    dbOperations.push(
-      this.prisma.inscription.deleteMany({
-        where: {
-          height: {
-            gte: fromHeight,
-          },
+  async reorg(fromHeight: number, prismaTx: Omit<PrismaClient, ITXClientDenyList>): Promise<void> {
+    await prismaTx.inscription.deleteMany({
+      where: {
+        height: {
+          gte: fromHeight,
         },
-      }),
-    );
+      },
+    });
   }
 
-  async getInscriptions(vins: VinData[]) {
+  async getInscriptions(vins: VinData[], prismaTx: Omit<PrismaClient, ITXClientDenyList>) {
     const envelopes: Envelope[] = [];
     // eslint-disable-next-line no-restricted-syntax
     for (const vin of vins) {
@@ -79,7 +79,7 @@ export class InscriptionHandler extends BaseIndexerHandler {
     const inscriptions: RawInscription[] = [];
     // eslint-disable-next-line no-restricted-syntax
     for (const envelope of envelopes) {
-      const inscription = await getInscriptionFromEnvelope(this.prisma, envelope, ordData);
+      const inscription = await getInscriptionFromEnvelope(prismaTx, envelope, ordData);
       if (inscription !== undefined) {
         inscriptions.push(inscription);
       }
@@ -87,12 +87,12 @@ export class InscriptionHandler extends BaseIndexerHandler {
     return inscriptions;
   }
 
-  async insertInscriptions(rawInscriptions: RawInscription[], dbOperations: PrismaPromise<any>[]) {
+  async insertInscriptions(rawInscriptions: RawInscription[], prismaTx: Omit<PrismaClient, ITXClientDenyList>) {
     const inscriptions: Inscription[] = [];
 
     // eslint-disable-next-line no-restricted-syntax
     for (const inscription of rawInscriptions) {
-      const output = await this.prisma.output.findUniqueOrThrow({
+      const output = await prismaTx.output.findUniqueOrThrow({
         where: {
           voutTxid_voutTxIndex: {
             voutTxid: inscription.outpoint.split(":")[0],
@@ -123,22 +123,20 @@ export class InscriptionHandler extends BaseIndexerHandler {
       if (inscription.oip) {
         entry.meta = inscription.oip;
         if (isOIP2Meta(inscription.oip)) {
-          entry.verified = await validateOIP2Meta(this.prisma, inscription.oip);
+          entry.verified = await validateOIP2Meta(prismaTx, inscription.oip);
         }
       }
 
       inscriptions.push(entry as Inscription);
     }
 
-    dbOperations.push(
-      this.prisma.inscription.createMany({
-        data: inscriptions,
-        skipDuplicates: true,
-      }),
-    );
+    await prismaTx.inscription.createMany({
+      data: inscriptions,
+      skipDuplicates: true,
+    });
   }
 
-  async transferInscriptions(outpoints: string[], dbOperations: PrismaPromise<any>[]) {
+  async transferInscriptions(outpoints: string[], prismaTx: Omit<PrismaClient, ITXClientDenyList>) {
     if (outpoints.length === 0) {
       return 0;
     }
@@ -148,7 +146,7 @@ export class InscriptionHandler extends BaseIndexerHandler {
     const chunkSize = 10_000;
     for (let i = 0; i < outpoints.length; i += chunkSize) {
       const chunk = outpoints.slice(i, i + chunkSize);
-      const docs = await this.prisma.inscription.findMany({
+      const docs = await prismaTx.inscription.findMany({
         where: {
           outpoint: {
             in: chunk,
@@ -160,7 +158,7 @@ export class InscriptionHandler extends BaseIndexerHandler {
       });
       await this.commitTransfers(
         docs.map((doc) => doc.id),
-        dbOperations,
+        prismaTx,
       );
       count += docs.length;
     }
@@ -168,7 +166,7 @@ export class InscriptionHandler extends BaseIndexerHandler {
     return count;
   }
 
-  async commitTransfers(ids: string[], dbOperations: PrismaPromise<any>[]) {
+  async commitTransfers(ids: string[], prismaTx: Omit<PrismaClient, ITXClientDenyList>) {
     const chunkSize = 5_000;
     for (let i = 0; i < ids.length; i += chunkSize) {
       const chunk = ids.slice(i, i + chunkSize);
@@ -176,7 +174,7 @@ export class InscriptionHandler extends BaseIndexerHandler {
       // eslint-disable-next-line no-restricted-syntax
       for (const item of data) {
         const [txid, n] = parseLocation(item.satpoint);
-        const output = await this.prisma.output.findUnique({
+        const output = await prismaTx.output.findUnique({
           where: {
             voutTxid_voutTxIndex: {
               voutTxid: txid,
@@ -185,17 +183,15 @@ export class InscriptionHandler extends BaseIndexerHandler {
           },
         });
 
-        dbOperations.push(
-          this.prisma.inscription.update({
-            where: {
-              inscriptionId: item.inscription_id,
-            },
-            data: {
-              owner: output?.addresses[0] ?? "",
-              outpoint: `${txid}:${n}`,
-            },
-          }),
-        );
+        await prismaTx.inscription.update({
+          where: {
+            inscriptionId: item.inscription_id,
+          },
+          data: {
+            owner: output?.addresses[0] ?? "",
+            outpoint: `${txid}:${n}`,
+          },
+        });
       }
     }
   }

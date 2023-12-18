@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/ban-types */
+import { PrismaClient } from "@prisma/client";
+import { ITXClientDenyList, Omit } from "@prisma/client/runtime/library";
 import { script } from "bitcoinjs-lib";
 
-import { PrismaService } from "../../PrismaService";
 import { validateCoreSignature, validateOrditSignature } from "./Signatures";
 
 const hasValidOip2Keys = makeObjectKeyChecker(["p", "v", "ty", "col", "iid", "publ", "nonce", "sig"]);
@@ -72,11 +73,11 @@ export function getMetaFromWitness(txinwitness: string[]): Object | undefined {
   }
 }
 
-export async function validateOIP2Meta(prisma: PrismaService, meta?: any): Promise<boolean> {
+export async function validateOIP2Meta(prismaTx: Omit<PrismaClient, ITXClientDenyList>, meta?: any): Promise<boolean> {
   if (meta === undefined || !isOIP2Meta(meta)) {
     return false;
   }
-  const origin = await prisma.inscription.findFirst({
+  const origin = await prismaTx.inscription.findFirst({
     where: {
       OR: [
         { inscriptionId: meta.col },
