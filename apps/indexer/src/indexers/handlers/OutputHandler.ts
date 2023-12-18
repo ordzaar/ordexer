@@ -1,5 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient, PrismaPromise } from "@prisma/client";
 import { ITXClientDenyList, Omit } from "@prisma/client/runtime/library";
 import { ScriptPubKey } from "src/bitcoin/BitcoinService";
 import { perf } from "src/utils/Log";
@@ -24,9 +24,12 @@ export class OutputHandler extends BaseIndexerHandler {
   ): Promise<void> {
     this.logger.log("[OUTPUT_HANDLER|COMMIT] commiting output..");
 
-    const outputs: VoutRow[] = [];
+    const insertingOutputsTs = perf();
+    const chunkSize = 5_000;
+    const outputPrismaPromises: PrismaPromise<Prisma.BatchPayload>[] = [];
+    let outputsCunk: VoutRow[] = [];
     for (let i = 0; i < vouts.length; i += 1) {
-      outputs.push({
+      outputsCunk.push({
         addresses: vouts[i].addresses,
         value: vouts[i].value,
         scriptPubKey: vouts[i].scriptPubKey,
@@ -35,16 +38,18 @@ export class OutputHandler extends BaseIndexerHandler {
         voutTxid: vouts[i].txid,
         voutTxIndex: vouts[i].n,
       });
+      if (outputsCunk.length % chunkSize === 0 || i === vouts.length - 1) {
+        outputPrismaPromises.push(
+          prismaTx.output.createMany({
+            data: outputsCunk,
+            skipDuplicates: true,
+          }),
+        );
+        outputsCunk = [];
+      }
     }
-
-    const insertingOutputsTs = perf();
-    await prismaTx.output.createMany({
-      data: outputs,
-      skipDuplicates: true,
-    });
-    this.logger.log(
-      `[OUTPUT_HANDLER|COMMIT] inserting ${outputs.length} data to output tx, took ${insertingOutputsTs.now} s`,
-    );
+    await Promise.all(outputPrismaPromises);
+    this.logger.log(`[OUTPUT_HANDLER|COMMIT] inserting data to output tx, took ${insertingOutputsTs.now} s`);
 
     const updatingOutputsTs = perf();
     // TODO optimize using concurency when updating output
