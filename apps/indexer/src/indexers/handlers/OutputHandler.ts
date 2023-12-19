@@ -28,9 +28,9 @@ export class OutputHandler extends BaseIndexerHandler {
 
     const insertingOutputsTs = perf();
     const outputPrismaPromises: PrismaPromise<Prisma.BatchPayload>[] = [];
-    let outputsCunk: VoutRow[] = [];
+    let outputsChunk: VoutRow[] = [];
     for (let i = 0; i < vouts.length; i += 1) {
-      outputsCunk.push({
+      outputsChunk.push({
         addresses: vouts[i].addresses,
         value: vouts[i].value,
         scriptPubKey: vouts[i].scriptPubKey,
@@ -40,16 +40,16 @@ export class OutputHandler extends BaseIndexerHandler {
         voutTxIndex: vouts[i].n,
       });
       if (
-        outputsCunk.length % this.configService.get<number>("indexer.outputHandler.insertChunk")! === 0 ||
+        outputsChunk.length % this.configService.get<number>("indexer.outputHandler.insertChunk")! === 0 ||
         i === vouts.length - 1
       ) {
         outputPrismaPromises.push(
           prismaTx.output.createMany({
-            data: outputsCunk,
+            data: outputsChunk,
             skipDuplicates: true,
           }),
         );
-        outputsCunk = [];
+        outputsChunk = [];
       }
     }
     await Promise.all(outputPrismaPromises);
