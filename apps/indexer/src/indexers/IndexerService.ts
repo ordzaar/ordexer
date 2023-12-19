@@ -47,13 +47,13 @@ export class IndexerService {
       const block = await this.bitcoinService.getBlock(blockhash, 2);
       this.logger.log(`[INDEXER|INDEX_BLOCK] reading block: ${blockHeight}, took ${readingBlockTs.now} s`);
 
-      // process the block and extract all the vin and vout information required
+      // Process the block and extract all the vin and vout information required
       // by subsequent index handlers.
       const handleBlockTs = perf();
       await this.handleBlock(block);
       this.logger.log(`[INDEXER|INDEX_BLOCK] handling block: ${blockHeight}, took ${handleBlockTs.now} s`);
 
-      // once we reach configured thresholds we commit the current vins and vouts
+      // Once we reach configured thresholds we commit the current vins and vouts
       // to the registered index handlers.
       if (this.hasReachedThreshold(blockHeight, options)) {
         await this.commitVinVout(blockHeight);
@@ -90,7 +90,7 @@ export class IndexerService {
         continue;
       }
 
-      // if the block hash already matches the current output, then there's no need to check further
+      // If the block hash already matches the current output, then there's no need to check further
       if (block.hash === output.voutBlockHash) {
         return currentBlockHeight;
       }
@@ -120,10 +120,10 @@ export class IndexerService {
   }
 
   private async handleBlock(block: Block<2>) {
-    // lazy address promises, resolve the address lookup later by concurent process
+    // Lazy address promises, resolve the address lookup later by concurent process
     const voutsAddressPromisesLimiter = promiseLimiter<string[]>(this.configService.get<number>("voutPromiseLimiter")!);
 
-    // use a native loop instead of a 'for-of' loop for performance reasons
+    // Use a native loop instead of a 'for-of' loop for performance reasons
     for (let i = 0; i < block.tx.length; i += 1) {
       if (isCoinbaseTx(block.tx[i]) === false) {
         for (let j = 0; j < block.tx[i].vin.length; j += 1) {
@@ -162,7 +162,7 @@ export class IndexerService {
       }
     }
 
-    // insert resolved addresses to existing vouts
+    // Insert resolved addresses to existing vouts
     const voutsAddresses = await voutsAddressPromisesLimiter.run();
     for (let j = 0; j < voutsAddresses.length; j += 1) {
       this.vouts[this.vouts.length - voutsAddresses.length + j].addresses = voutsAddresses[j];
@@ -181,7 +181,7 @@ export class IndexerService {
           await this.handlers[i].commit(lastBlockHeight, this.vins, this.vouts, prismaTx);
         }
 
-        // set the last indexed block into db
+        // Set the last indexed block into db
         await prismaTx.indexer.upsert({
           where: {
             name: INDEXER_LAST_HEIGHT_KEY,
@@ -214,7 +214,7 @@ export class IndexerService {
           await this.handlers[i].reorg(fromBlockHeight, prismaTx);
         }
 
-        // set the last healthy indexed block into db
+        // Set the last healthy indexed block into db
         await prismaTx.indexer.update({
           where: {
             name: INDEXER_LAST_HEIGHT_KEY,

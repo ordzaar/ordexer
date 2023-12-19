@@ -29,9 +29,8 @@ export class IndexerTask {
     };
   }
 
-  // run the check block every x time to check the new block.
-  // once the node block is greater than the indexed block, then index the new block
-  // otherwise, skip the process.
+  // Run the check block every x time to check the new block.
+  // Once the node block is greater than the indexed block, then index the new block otherwise, skip the process.
   @Cron(CronExpression.EVERY_5_SECONDS)
   async checkForBlock() {
     if (this.indexing) return;
@@ -48,11 +47,11 @@ export class IndexerTask {
       indexerBlockHeight = indexerRow.block;
     }
 
-    // check for reorg
-    // reorg is a process to ensure that every indexed block has a matching hash block with the node.
+    // Check for reorg
+    // Reorg is a process to ensure that every indexed block has a matching hash block with the node.
     // https://learnmeabitcoin.com/technical/chain-reorganisation
-    // if the indexed block has an unmatched hash with the node block, it will revert to the last matching hash block (the last healthy block)
-    // basically, it will wipe out all data greater than or equal to the unmatched hash block
+    // If the indexed block has an unmatched hash with the node block, it will revert to the last matching hash block (the last healthy block).
+    // Basically, it will wipe out all data greater than or equal to the unmatched hash block
     // and then reset the last indexed block to the healthy block.
     if (indexerBlockHeight !== -1) {
       this.reorging = true;
@@ -75,7 +74,7 @@ export class IndexerTask {
       return;
     }
 
-    // indexing
+    // Indexing
     this.logger.log("[INDEXER_SCHEDULE] start indexing..");
     const indexOptions = {
       threshold: {
