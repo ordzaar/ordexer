@@ -3,6 +3,11 @@ import { ITXClientDenyList, Omit } from "@prisma/client/runtime/library";
 
 import { VinData, VoutData } from "../types";
 
+/**
+ * Base class for indexer handlers.
+ * @abstract commit - commit a block to the database
+ * @abstract reorg - hangles reorgs
+ */
 export abstract class BaseIndexerHandler {
   abstract commit(
     lastBlockHeight: number,

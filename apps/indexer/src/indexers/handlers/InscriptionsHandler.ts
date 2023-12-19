@@ -20,6 +20,16 @@ export class InscriptionHandler extends BaseIndexerHandler {
     this.logger = new Logger(InscriptionHandler.name);
   }
 
+  /**
+   * Commits chunk of inscriptions to the database.
+   * We use transactions in commiting. If any of the queries fail, the whole transaction is rolled back.
+   * This ensures that we don't have any partial data in the database, which may cause future issues.
+   *
+   * @param lastBlockHeight - height of the last block in the chunk
+   * @param vins - array of vins
+   * @param vouts - array of vouts
+   * @param prismaTx - prisma transaction
+   */
   async commit(
     lastBlockHeight: number,
     vins: VinData[],
@@ -33,12 +43,17 @@ export class InscriptionHandler extends BaseIndexerHandler {
 
     this.logger.log("[INSCRIPTION_HANDLER|COMMIT] commiting insription..");
 
+    // Wait for the block to be indexed by Ord Server
+    // Ord server may be slightly behind the Bitcoin Node as it needs to index new blocks
     await this.ord.waitForBlock(lastBlockHeight);
 
+    // Extracts inscriptions from vins
     const inscriptions = await this.getInscriptions(vins, prismaTx);
 
+    // Inserts new inscriptions into the database
     await this.insertInscriptions(inscriptions, prismaTx);
 
+    // Updates inscriptions that have been transferred to new owners
     await this.transferInscriptions(
       vins.map(({ vout }) => `${vout.txid}:${vout.n}`),
       prismaTx,
@@ -55,6 +70,12 @@ export class InscriptionHandler extends BaseIndexerHandler {
     });
   }
 
+  /**
+   * Extracts inscriptions from vins.
+   *
+   * @param vins - array of vins
+   * @param prismaTx - prisma transaction
+   */
   async getInscriptions(vins: VinData[], prismaTx: Omit<PrismaClient, ITXClientDenyList>) {
     const envelopes: Envelope[] = [];
     // eslint-disable-next-line no-restricted-syntax
@@ -87,6 +108,12 @@ export class InscriptionHandler extends BaseIndexerHandler {
     return inscriptions;
   }
 
+  /**
+   * Inserts inscriptions into the database.
+   *
+   * @param rawInscriptions - array of inscriptions
+   * @param prismaTx - prisma transaction
+   */
   async insertInscriptions(rawInscriptions: RawInscription[], prismaTx: Omit<PrismaClient, ITXClientDenyList>) {
     const inscriptions: Inscription[] = [];
 
@@ -136,6 +163,12 @@ export class InscriptionHandler extends BaseIndexerHandler {
     });
   }
 
+  /**
+   * Transfers inscriptions to new owners.
+   *
+   * @param outpoints - array of outpoints
+   * @param prismaTx - prisma transaction
+   */
   async transferInscriptions(outpoints: string[], prismaTx: Omit<PrismaClient, ITXClientDenyList>) {
     if (outpoints.length === 0) {
       return 0;
@@ -166,6 +199,12 @@ export class InscriptionHandler extends BaseIndexerHandler {
     return count;
   }
 
+  /**
+   * Helper method to commit transfers to the database.
+   *
+   * @param ids - array of inscription ids
+   * @param prismaTx - prisma transaction
+   */
   async commitTransfers(ids: string[], prismaTx: Omit<PrismaClient, ITXClientDenyList>) {
     const chunkSize = 5_000;
     for (let i = 0; i < ids.length; i += chunkSize) {
