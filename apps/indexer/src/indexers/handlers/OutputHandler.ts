@@ -18,6 +18,16 @@ export class OutputHandler extends BaseIndexerHandler {
     this.logger = new Logger(OutputHandler.name);
   }
 
+  /**
+   * Commits chunk of vouts and vins to the database.
+   * We use transactions in commiting. If any of the queries fail, the whole transaction is rolled back.
+   * This ensures that we don't have any partial data in the database, which may cause future issues. For example, an output that has an unsuccessfully commit vin may be returned as spendable.
+   *
+   * @param lastBlockHeight - height of the last block in the chunk
+   * @param vins - array of vins
+   * @param vouts - array of vouts
+   * @param prismaTx - prisma transaction
+   */
   async commit(
     _: number,
     vins: VinData[],
@@ -28,6 +38,9 @@ export class OutputHandler extends BaseIndexerHandler {
 
     const insertingOutputsTs = perf();
     const outputPrismaPromises: PrismaPromise<Prisma.BatchPayload>[] = [];
+
+    // Outputs are inserted in chunks to improve performance
+    // Chunk size is defined in config
     let outputsChunk: VoutRow[] = [];
     for (let i = 0; i < vouts.length; i += 1) {
       outputsChunk.push({
@@ -39,6 +52,7 @@ export class OutputHandler extends BaseIndexerHandler {
         voutTxid: vouts[i].txid,
         voutTxIndex: vouts[i].n,
       });
+      // Once we hit chunk size, or we are at the end of the array, we add the chunk query to the array
       if (
         outputsChunk.length % this.configService.get<number>("indexer.outputHandler.insertChunk")! === 0 ||
         i === vouts.length - 1
@@ -57,6 +71,9 @@ export class OutputHandler extends BaseIndexerHandler {
       `[OUTPUT_HANDLER|COMMIT] inserting ${vouts.length} data to output tx, took ${insertingOutputsTs.now} s`,
     );
 
+    // Update spent outputs by looping vins
+    // This updates an output whose vout was inserted in the past
+    // There should not be a vin for an output that was not inserted
     const updatingOutputsTs = perf();
     const outputUpdate = prismaTx.output.update;
     const updatePromiseLimiter = promiseLimiter(
