@@ -1,6 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { PrismaPromise } from "@prisma/client";
 import { BitcoinService, Block } from "src/bitcoin/BitcoinService";
 import { isCoinbaseTx } from "src/bitcoin/utils/Transaction";
 import { perf } from "src/utils/Log";
@@ -19,8 +18,6 @@ export class IndexerService {
   private vins: VinData[] = [];
 
   private vouts: VoutData[] = [];
-
-  private dbOperations: PrismaPromise<any>[] = [];
 
   private handlers: BaseIndexerHandler[] = [];
 
@@ -176,56 +173,61 @@ export class IndexerService {
 
   private async commitVinVout(lastBlockHeight: number) {
     this.logger.log(`[INDEXER|COMMIT] commiting block: ${lastBlockHeight}..`);
-
-    for (let i = 0; i < this.handlers.length; i += 1) {
-      await this.handlers[i].commit(lastBlockHeight, this.vins, this.vouts, this.dbOperations);
-    }
-
-    this.dbOperations.push(
-      this.prisma.indexer.upsert({
-        where: {
-          name: INDEXER_LAST_HEIGHT_KEY,
-        },
-        update: {
-          block: lastBlockHeight,
-        },
-        create: {
-          name: INDEXER_LAST_HEIGHT_KEY,
-          block: lastBlockHeight,
-        },
-      }),
-    );
+    this.logger.log(`[INDEXER|COMMIT] total vins: ${this.vins.length}`);
+    this.logger.log(`[INDEXER|COMMIT] total vouts: ${this.vouts.length}`);
 
     const dbTxTs = perf();
-    await this.prisma.$transaction(this.dbOperations);
-    this.logger.log(`[INDEXER|COMMIT] executing commit db tx, took ${dbTxTs.now} s`);
+    await this.prisma.$transaction(
+      async (prismaTx) => {
+        for (let i = 0; i < this.handlers.length; i += 1) {
+          await this.handlers[i].commit(lastBlockHeight, this.vins, this.vouts, prismaTx);
+        }
+
+        await prismaTx.indexer.upsert({
+          where: {
+            name: INDEXER_LAST_HEIGHT_KEY,
+          },
+          update: {
+            block: lastBlockHeight,
+          },
+          create: {
+            name: INDEXER_LAST_HEIGHT_KEY,
+            block: lastBlockHeight,
+          },
+        });
+      },
+      {
+        timeout: this.configService.get<number>("indexer.transactionTimeout")!,
+      },
+    );
+    this.logger.log(`[INDEXER|COMMIT] executing commit data, took ${dbTxTs.now} s`);
 
     this.vins = [];
     this.vouts = [];
-    this.dbOperations = [];
   }
 
   async performReorg(lastHealthyBlockHeight: number) {
-    for (let i = 0; i < this.handlers.length; i += 1) {
-      const fromBlockHeight = lastHealthyBlockHeight + 1;
-      await this.handlers[i].reorg(fromBlockHeight, this.dbOperations);
-    }
-
-    this.dbOperations.push(
-      this.prisma.indexer.update({
-        where: {
-          name: INDEXER_LAST_HEIGHT_KEY,
-        },
-        data: {
-          block: lastHealthyBlockHeight,
-        },
-      }),
-    );
-
     const dbTxTs = perf();
-    await this.prisma.$transaction(this.dbOperations);
-    this.logger.log(`[INDEXER|REORG] executing reorg db tx, took ${dbTxTs.now} s`);
+    await this.prisma.$transaction(
+      async (prismaTx) => {
+        for (let i = 0; i < this.handlers.length; i += 1) {
+          const fromBlockHeight = lastHealthyBlockHeight + 1;
+          await this.handlers[i].reorg(fromBlockHeight, prismaTx);
+        }
 
-    this.dbOperations = [];
+        await prismaTx.indexer.update({
+          where: {
+            name: INDEXER_LAST_HEIGHT_KEY,
+          },
+          data: {
+            block: lastHealthyBlockHeight,
+          },
+        });
+      },
+      {
+        timeout: this.configService.get<number>("indexer.transactionTimeout")!,
+      },
+    );
+    this.logger.log(`[INDEXER|REORG] executing reorg, took ${dbTxTs.now} s`);
   }
 }

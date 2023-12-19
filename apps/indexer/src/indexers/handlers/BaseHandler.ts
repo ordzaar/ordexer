@@ -1,13 +1,14 @@
-import { PrismaPromise } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
+import { ITXClientDenyList, Omit } from "@prisma/client/runtime/library";
 
 import { VinData, VoutData } from "../types";
 
 export abstract class BaseIndexerHandler {
   abstract commit(
-    height: number,
+    lastBlockHeight: number,
     vins: VinData[],
     vouts: VoutData[],
-    dbOperations: PrismaPromise<any>[],
+    prismaTx: Omit<PrismaClient, ITXClientDenyList>,
   ): Promise<void>;
-  abstract reorg(fromHeight: number, prismaPromises: PrismaPromise<any>[]): Promise<void>;
+  abstract reorg(fromHeight: number, prismaTx: Omit<PrismaClient, ITXClientDenyList>): Promise<void>;
 }

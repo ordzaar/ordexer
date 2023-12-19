@@ -1,8 +1,10 @@
 /* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable consistent-return */
+import { PrismaClient } from "@prisma/client";
+import { ITXClientDenyList, Omit } from "@prisma/client/runtime/library";
+
 import { RawTransaction } from "../../bitcoin/BitcoinService";
 import { OrdInscription } from "../../ord/providers/OrdProvider";
-import { PrismaService } from "../../PrismaService";
 import { VinData } from "../types";
 import { Envelope } from "./Envelope";
 import { parseLocation } from "./Transaction";
@@ -105,7 +107,7 @@ type InscriptionMedia = {
 };
 
 export async function getInscriptionFromEnvelope(
-  prisma: PrismaService,
+  prismaTx: Omit<PrismaClient, ITXClientDenyList>,
   envelope: Envelope,
   ord: Map<string, OrdInscription>,
 ): Promise<Inscription | undefined> {
@@ -121,8 +123,8 @@ export async function getInscriptionFromEnvelope(
     parent: envelope.parent,
     children: [],
     genesis: envelope.txid,
-    creator: await getInscriptionCreator(prisma, envelope.txid),
-    owner: await getInscriptionOwner(prisma, locationTxid, locationN),
+    creator: await getInscriptionCreator(prismaTx, envelope.txid),
+    owner: await getInscriptionOwner(prismaTx, locationTxid, locationN),
     media: {
       type: envelope.media.type ?? "",
       charset: envelope.media.charset,
@@ -145,8 +147,8 @@ export async function getInscriptionFromEnvelope(
   });
 }
 
-async function getInscriptionCreator(prisma: PrismaService, txid: string) {
-  const data = await prisma.output.findUnique({
+async function getInscriptionCreator(prismaTx: Omit<PrismaClient, ITXClientDenyList>, txid: string) {
+  const data = await prismaTx.output.findUnique({
     where: {
       voutTxid_voutTxIndex: {
         voutTxid: txid,
@@ -157,8 +159,8 @@ async function getInscriptionCreator(prisma: PrismaService, txid: string) {
   return data?.addresses[0] ?? "";
 }
 
-async function getInscriptionOwner(prisma: PrismaService, txid: string, n: number) {
-  const data = await prisma.output.findUnique({
+async function getInscriptionOwner(prismaTx: Omit<PrismaClient, ITXClientDenyList>, txid: string, n: number) {
+  const data = await prismaTx.output.findUnique({
     where: {
       voutTxid_voutTxIndex: {
         voutTxid: txid,
