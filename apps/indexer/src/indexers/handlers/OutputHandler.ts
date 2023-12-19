@@ -1,8 +1,10 @@
 import { Injectable, Logger } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { Prisma, PrismaClient, PrismaPromise } from "@prisma/client";
 import { ITXClientDenyList, Omit } from "@prisma/client/runtime/library";
 import { ScriptPubKey } from "src/bitcoin/BitcoinService";
 import { perf } from "src/utils/Log";
+import { promiseLimiter } from "src/utils/Promise";
 
 import { VinData, VoutData } from "../types";
 import { BaseIndexerHandler } from "./BaseHandler";
@@ -11,7 +13,7 @@ import { BaseIndexerHandler } from "./BaseHandler";
 export class OutputHandler extends BaseIndexerHandler {
   private readonly logger: Logger;
 
-  constructor() {
+  constructor(private readonly configService: ConfigService) {
     super();
     this.logger = new Logger(OutputHandler.name);
   }
@@ -25,7 +27,6 @@ export class OutputHandler extends BaseIndexerHandler {
     this.logger.log("[OUTPUT_HANDLER|COMMIT] commiting output..");
 
     const insertingOutputsTs = perf();
-    const chunkSize = 5_000;
     const outputPrismaPromises: PrismaPromise<Prisma.BatchPayload>[] = [];
     let outputsCunk: VoutRow[] = [];
     for (let i = 0; i < vouts.length; i += 1) {
@@ -38,7 +39,10 @@ export class OutputHandler extends BaseIndexerHandler {
         voutTxid: vouts[i].txid,
         voutTxIndex: vouts[i].n,
       });
-      if (outputsCunk.length % chunkSize === 0 || i === vouts.length - 1) {
+      if (
+        outputsCunk.length % this.configService.get<number>("indexer.outputHandler.insertChunk")! === 0 ||
+        i === vouts.length - 1
+      ) {
         outputPrismaPromises.push(
           prismaTx.output.createMany({
             data: outputsCunk,
@@ -49,27 +53,35 @@ export class OutputHandler extends BaseIndexerHandler {
       }
     }
     await Promise.all(outputPrismaPromises);
-    this.logger.log(`[OUTPUT_HANDLER|COMMIT] inserting data to output tx, took ${insertingOutputsTs.now} s`);
+    this.logger.log(
+      `[OUTPUT_HANDLER|COMMIT] inserting ${vouts.length} data to output tx, took ${insertingOutputsTs.now} s`,
+    );
 
     const updatingOutputsTs = perf();
-    // TODO optimize using concurency when updating output
+    const outputUpdate = prismaTx.output.update;
+    const updatePromiseLimiter = promiseLimiter(
+      this.configService.get<number>("indexer.outputHandler.updatePromiseLimiter")!,
+    );
     for (let i = 0; i < vins.length; i += 1) {
-      await prismaTx.output.update({
-        where: {
-          voutTxid_voutTxIndex: {
-            voutTxid: vins[i].vout.txid,
-            voutTxIndex: vins[i].vout.n,
+      updatePromiseLimiter.push(async () =>
+        outputUpdate({
+          where: {
+            voutTxid_voutTxIndex: {
+              voutTxid: vins[i].vout.txid,
+              voutTxIndex: vins[i].vout.n,
+            },
           },
-        },
-        data: {
-          spent: true,
-          vinBlockHash: vins[i].block.hash,
-          vinBlockHeight: vins[i].block.height,
-          vinTxid: vins[i].txid,
-          vinTxIndex: vins[i].n,
-        },
-      });
+          data: {
+            spent: true,
+            vinBlockHash: vins[i].block.hash,
+            vinBlockHeight: vins[i].block.height,
+            vinTxid: vins[i].txid,
+            vinTxIndex: vins[i].n,
+          },
+        }),
+      );
     }
+    await updatePromiseLimiter.run();
     this.logger.log(
       `[OUTPUT_HANDLER|COMMIT] updating ${vins.length} data to output tx, took ${updatingOutputsTs.now} s`,
     );

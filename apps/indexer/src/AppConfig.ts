@@ -25,6 +25,10 @@ export function appConfig() {
         numVouts: parseInt(process.env.INDEXER_THRESHOLD_NUM_VOUTS ?? "250000", 10),
       },
       reorgLength: parseInt(process.env.INDEXER_REORG_LENGTH ?? "10", 10),
+      outputHandler: {
+        insertChunk: parseInt(process.env.INDEXER_OUTPUT_HANDLER_INSERT_CHUNK ?? "20000", 10),
+        updatePromiseLimiter: parseInt(process.env.INDEXER_OUTPUT_HANDLER_UPDATE_PROMISE_LIMITER ?? "100", 10),
+      },
     },
   };
 }
