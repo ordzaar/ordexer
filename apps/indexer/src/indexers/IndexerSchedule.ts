@@ -13,8 +13,6 @@ export class IndexerTask {
 
   private indexing = false;
 
-  private outdated = false;
-
   private reorging = false;
 
   constructor(
@@ -27,18 +25,18 @@ export class IndexerTask {
   get status() {
     return {
       indexing: this.indexing,
-      outdated: this.outdated,
       reorging: this.reorging,
     };
   }
 
+  // run the check block every x time to check the new block.
+  // once the node block is greater than the indexed block, then index the new block
+  // otherwise, skip the process.
   @Cron(CronExpression.EVERY_5_SECONDS)
   async checkForBlock() {
     if (this.indexing) return;
     this.indexing = true;
     this.logger.log("[INDEXER_SCHEDULE] check for block");
-
-    // TODO set status outdated
 
     let indexerBlockHeight = -1;
     const indexerRow = await this.prisma.indexer.findFirst({
@@ -51,12 +49,17 @@ export class IndexerTask {
     }
 
     // check for reorg
+    // reorg is a process to ensure that every indexed block has a matching hash block with the node.
+    // https://learnmeabitcoin.com/technical/chain-reorganisation
+    // if the indexed block has an unmatched hash with the node block, it will revert to the last matching hash block (the last healthy block)
+    // basically, it will wipe out all data greater than or equal to the unmatched hash block
+    // and then reset the last indexed block to the healthy block.
     if (indexerBlockHeight !== -1) {
       this.reorging = true;
       const reorgBlockLength = this.configService.get<number>("indexer.reorgLength")!;
       const lastHealthyBlockHeight = await this.indexerService.getReorgHeight(indexerBlockHeight, reorgBlockLength);
       if (lastHealthyBlockHeight < indexerBlockHeight) {
-        this.logger.log("[INDEXER_SCHEDULE|REORG_CHECK] indexer is not healthy, need to perform reorg");
+        this.logger.log("[INDEXER_SCHEDULE|REORG_CHECK] indexed blocks is not healthy, needs to perform reorg");
         this.logger.log("[INDEXER_SCHEDULE|REORG_CHECK] performing reorg..");
         await this.indexerService.performReorg(lastHealthyBlockHeight);
 
@@ -64,7 +67,7 @@ export class IndexerTask {
       }
       this.reorging = false;
     }
-    this.logger.log("[INDEXER_SCHEDULE] indexer is healthy");
+    this.logger.log("[INDEXER_SCHEDULE] indexed blocks is healthy");
 
     const targetBlockHeight = await this.bitcoinService.getBlockCount();
     if (indexerBlockHeight >= targetBlockHeight) {

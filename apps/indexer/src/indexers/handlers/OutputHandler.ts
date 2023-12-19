@@ -26,6 +26,8 @@ export class OutputHandler extends BaseIndexerHandler {
   ): Promise<void> {
     this.logger.log("[OUTPUT_HANDLER|COMMIT] commiting output..");
 
+    // chunk the vouts data into batches when inserting data into db
+    // perform the batch insertion concurrently
     const insertingOutputsTs = perf();
     const outputPrismaPromises: PrismaPromise<Prisma.BatchPayload>[] = [];
     let outputsChunk: VoutRow[] = [];
@@ -57,6 +59,9 @@ export class OutputHandler extends BaseIndexerHandler {
       `[OUTPUT_HANDLER|COMMIT] inserting ${vouts.length} data to output tx, took ${insertingOutputsTs.now} s`,
     );
 
+    // use the concurrency limiter when updating data to the output db
+    // instead of looping and waiting for the update process one by one
+    // we can speed up the update of x number of data at the same time.
     const updatingOutputsTs = perf();
     const outputUpdate = prismaTx.output.update;
     const updatePromiseLimiter = promiseLimiter(

@@ -47,15 +47,13 @@ export class IndexerService {
       const block = await this.bitcoinService.getBlock(blockhash, 2);
       this.logger.log(`[INDEXER|INDEX_BLOCK] reading block: ${blockHeight}, took ${readingBlockTs.now} s`);
 
-      // ### Block
-      // Process the block and extract all the vin and vout information required
+      // process the block and extract all the vin and vout information required
       // by subsequent index handlers.
       const handleBlockTs = perf();
       await this.handleBlock(block);
       this.logger.log(`[INDEXER|INDEX_BLOCK] handling block: ${blockHeight}, took ${handleBlockTs.now} s`);
 
-      // ### Commit
-      // Once we reach configured thresholds we commit the current vins and vouts
+      // once we reach configured thresholds we commit the current vins and vouts
       // to the registered index handlers.
       if (this.hasReachedThreshold(blockHeight, options)) {
         await this.commitVinVout(blockHeight);
@@ -92,7 +90,7 @@ export class IndexerService {
         continue;
       }
 
-      // if the block hash is already match with current output hash then no need to check more
+      // if the block hash already matches the current output, then there's no need to check further
       if (block.hash === output.voutBlockHash) {
         return currentBlockHeight;
       }
@@ -183,6 +181,7 @@ export class IndexerService {
           await this.handlers[i].commit(lastBlockHeight, this.vins, this.vouts, prismaTx);
         }
 
+        // set the last indexed block into db
         await prismaTx.indexer.upsert({
           where: {
             name: INDEXER_LAST_HEIGHT_KEY,
@@ -215,6 +214,7 @@ export class IndexerService {
           await this.handlers[i].reorg(fromBlockHeight, prismaTx);
         }
 
+        // set the last healthy indexed block into db
         await prismaTx.indexer.update({
           where: {
             name: INDEXER_LAST_HEIGHT_KEY,
