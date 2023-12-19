@@ -17,6 +17,7 @@ export function appConfig() {
       uri: process.env.ORD_URI,
       port: process.env.ORD_PORT,
     },
+    // only increase it when the node is supports concurency
     voutPromiseLimiter: parseInt(process.env.VOUT_PROMISE_LIMITER ?? "1", 10),
     indexer: {
       threshold: {
@@ -24,6 +25,7 @@ export function appConfig() {
         numVins: parseInt(process.env.INDEXER_THRESHOLD_NUM_VINS ?? "250000", 10),
         numVouts: parseInt(process.env.INDEXER_THRESHOLD_NUM_VOUTS ?? "250000", 10),
       },
+      transactionTimeout: parseInt(process.env.INDEXER_TRANSACTION_TIMEOUT ?? "1200000", 10), // 20 minutes
       reorgLength: parseInt(process.env.INDEXER_REORG_LENGTH ?? "10", 10),
       outputHandler: {
         insertChunk: parseInt(process.env.INDEXER_OUTPUT_HANDLER_INSERT_CHUNK ?? "20000", 10),

@@ -197,7 +197,7 @@ export class IndexerService {
         });
       },
       {
-        timeout: 1000 * 60 * 20, // 20 minutes
+        timeout: this.configService.get<number>("indexer.transactionTimeout")!,
       },
     );
     this.logger.log(`[INDEXER|COMMIT] executing commit data, took ${dbTxTs.now} s`);
@@ -225,7 +225,7 @@ export class IndexerService {
         });
       },
       {
-        timeout: 1000 * 60 * 20, // 20 minutes
+        timeout: this.configService.get<number>("indexer.transactionTimeout")!,
       },
     );
     this.logger.log(`[INDEXER|REORG] executing reorg, took ${dbTxTs.now} s`);
