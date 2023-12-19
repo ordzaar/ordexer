@@ -1,16 +1,10 @@
 import { Controller, Get, Param } from "@nestjs/common";
-import { BitcoinService } from "@ordzaar/bitcoin-service";
-import { OrdProvider } from "@ordzaar/ord-service";
 
 import { AddressService } from "./AddressService";
 
 @Controller("address")
 export class AddressController {
-  constructor(
-    private bitcoin: BitcoinService,
-    private ord: OrdProvider,
-    private addressService: AddressService,
-  ) {}
+  constructor(private addressService: AddressService) {}
 
   @Get("getBalance/:address")
   async getBalance(@Param("address") address: string) {
