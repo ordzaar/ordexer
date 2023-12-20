@@ -1,8 +1,8 @@
 import { Injectable, Logger } from "@nestjs/common";
+import { OrdInscription, OrdProvider } from "@ordzaar/rpcservices";
 import { PrismaClient } from "@prisma/client";
 import { ITXClientDenyList, Omit } from "@prisma/client/runtime/library";
 
-import { OrdInscription, OrdProvider } from "../../ord/providers/OrdProvider";
 import { perf } from "../../utils/Log";
 import { VinData, VoutData } from "../types";
 import { Envelope } from "../utils/Envelope";

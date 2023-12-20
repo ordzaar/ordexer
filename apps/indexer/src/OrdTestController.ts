@@ -1,6 +1,5 @@
 import { Controller, Get, Param } from "@nestjs/common";
-
-import { OrdProvider } from "./ord/providers/OrdProvider";
+import { OrdProvider } from "@ordzaar/rpcservices";
 
 @Controller("ordtest")
 export class OrdTestController {
