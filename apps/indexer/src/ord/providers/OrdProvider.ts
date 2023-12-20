@@ -54,7 +54,7 @@ export class OrdProvider {
     return this.call<number>("/blockheight");
   }
 
-  async getInscription(id: string): Promise<any> {
+  async getInscription(id: string): Promise<DetailedInscription> {
     return this.call<any>(`/inscription/${id}`);
   }
 
@@ -74,6 +74,26 @@ export class OrdProvider {
     return this.call<OrdInscription[]>(`/inscriptions?`, { ids });
   }
 }
+
+export type DetailedInscription = {
+  address: string;
+  children: string[];
+  content_length: number;
+  content_type: string;
+  genesis_fee: number;
+  genesis_height: number;
+  inscription_id: string;
+  inscription_number: number;
+  inscription_sequence: number;
+  next: string;
+  output_value: number;
+  parent: string | null;
+  previous: string;
+  rune: string | null;
+  sat: number;
+  satpoint: string;
+  timestamp: number;
+};
 
 export type OrdInscription = {
   inscription_id: string;
