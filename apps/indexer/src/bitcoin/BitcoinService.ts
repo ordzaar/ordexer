@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import { getBitcoinNetwork } from "src/indexers/utils/Network";
 
 import { extractAddress } from "./utils/Address";
 
@@ -84,8 +85,10 @@ export class BitcoinService {
       return vout.scriptPubKey.addresses;
     }
 
-    const network = this.configService.get<"mainnet" | "testnet" | "regtest">("network")!;
-    const address = extractAddress(Buffer.from(vout.scriptPubKey.hex, "hex"), network);
+    const address = extractAddress(
+      Buffer.from(vout.scriptPubKey.hex, "hex"),
+      getBitcoinNetwork(this.configService.getOrThrow<string>("network")),
+    );
     if (address !== undefined) {
       return [address];
     }

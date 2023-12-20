@@ -3,8 +3,11 @@ import * as process from "process";
 
 const network = process.env.NETWORK;
 
-export function getBitcoinNetwork(): networks.Network {
-  switch (network) {
+// make this backward compatible with the legacy 'ordit' function
+export function getBitcoinNetwork(networkStr?: string): networks.Network {
+  const networkEnv = networkStr || network;
+
+  switch (networkEnv) {
     case "mainnet":
       return networks.bitcoin;
     case "testnet":

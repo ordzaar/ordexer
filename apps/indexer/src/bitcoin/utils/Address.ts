@@ -1,13 +1,8 @@
 import { address as addr, networks, payments } from "bitcoinjs-lib";
 
-export function extractAddress(script: Buffer, network: "mainnet" | "testnet" | "regtest") {
-  const networkLib = network === "mainnet" ? networks.bitcoin : networks[network];
-  if (network === undefined) {
-    throw new Error("invalid network", network);
-  }
-
+export function extractAddress(script: Buffer, network: networks.Network) {
   try {
-    const address = addr.fromOutputScript(script, networkLib);
+    const address = addr.fromOutputScript(script, network);
     if (address) {
       return address;
     }
@@ -16,7 +11,7 @@ export function extractAddress(script: Buffer, network: "mainnet" | "testnet" | 
   }
 
   try {
-    const { address } = payments.p2pkh({ output: script, network: networkLib });
+    const { address } = payments.p2pkh({ output: script, network });
     if (address) {
       return address;
     }
@@ -25,7 +20,7 @@ export function extractAddress(script: Buffer, network: "mainnet" | "testnet" | 
   }
 
   try {
-    const { address } = payments.p2sh({ output: script, network: networkLib });
+    const { address } = payments.p2sh({ output: script, network });
     if (address) {
       return address;
     }
@@ -34,7 +29,7 @@ export function extractAddress(script: Buffer, network: "mainnet" | "testnet" | 
   }
 
   try {
-    const { address } = payments.p2wpkh({ output: script, network: networkLib });
+    const { address } = payments.p2wpkh({ output: script, network });
     if (address) {
       return address;
     }
@@ -43,7 +38,7 @@ export function extractAddress(script: Buffer, network: "mainnet" | "testnet" | 
   }
 
   try {
-    const { address } = payments.p2wsh({ output: script, network: networkLib });
+    const { address } = payments.p2wsh({ output: script, network });
     if (address) {
       return address;
     }

@@ -99,7 +99,7 @@ export class IndexerService {
     }
 
     const msg =
-      "[INDEXER|REORG_HEIGHT] reorg block value si more than the threshold, block is not healthy, please check it manually or increase the reorg threshold";
+      "[INDEXER|REORG_HEIGHT] reorg block value is more than the threshold, block is not healthy, please check it manually or increase the reorg threshold";
     this.logger.log(msg);
     throw new Error(msg);
   }
