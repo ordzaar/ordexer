@@ -40,6 +40,7 @@ export class OutputHandler extends BaseIndexerHandler {
     // Chunk size is defined in config
     const insertingOutputsTs = perf();
     const outputPrismaPromises: PrismaPromise<Prisma.BatchPayload>[] = [];
+    const chunkSize = this.configService.getOrThrow<number>("indexer.outputHandler.insertChunk");
     let outputsChunk: VoutRow[] = [];
     for (let i = 0; i < vouts.length; i += 1) {
       outputsChunk.push({
@@ -52,10 +53,7 @@ export class OutputHandler extends BaseIndexerHandler {
         voutTxIndex: vouts[i].n,
       });
       // Once we hit chunk size, or we are at the end of the array, we add the chunk query to the array
-      if (
-        outputsChunk.length % this.configService.get<number>("indexer.outputHandler.insertChunk")! === 0 ||
-        i === vouts.length - 1
-      ) {
+      if (outputsChunk.length % chunkSize === 0 || i === vouts.length - 1) {
         outputPrismaPromises.push(
           prismaTx.output.createMany({
             data: outputsChunk,
@@ -79,7 +77,7 @@ export class OutputHandler extends BaseIndexerHandler {
     const updatingOutputsTs = perf();
     const outputUpdate = prismaTx.output.update;
     const updatePromiseLimiter = promiseLimiter(
-      this.configService.get<number>("indexer.outputHandler.updatePromiseLimiter")!,
+      this.configService.getOrThrow<number>("indexer.outputHandler.updatePromiseLimiter"),
     );
     for (let i = 0; i < vins.length; i += 1) {
       updatePromiseLimiter.push(async () =>

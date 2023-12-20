@@ -38,7 +38,7 @@ export class IndexerTask {
     this.logger.log("[INDEXER_SCHEDULE] check for block");
 
     let indexerBlockHeight = -1;
-    const indexerRow = await this.prisma.indexer.findFirst({
+    const indexerRow = await this.prisma.indexer.findUnique({
       where: {
         name: INDEXER_LAST_HEIGHT_KEY,
       },
@@ -55,7 +55,7 @@ export class IndexerTask {
     // and then reset the last indexed block to the healthy block.
     if (indexerBlockHeight !== -1) {
       this.reorging = true;
-      const reorgBlockLength = this.configService.get<number>("indexer.reorgLength")!;
+      const reorgBlockLength = this.configService.getOrThrow<number>("indexer.reorgLength");
       const lastHealthyBlockHeight = await this.indexerService.getReorgHeight(indexerBlockHeight, reorgBlockLength);
       if (lastHealthyBlockHeight < indexerBlockHeight) {
         this.logger.log("[INDEXER_SCHEDULE|REORG_CHECK] indexed blocks is not healthy, needs to perform reorg");
@@ -78,9 +78,9 @@ export class IndexerTask {
     this.logger.log("[INDEXER_SCHEDULE] start indexing..");
     const indexOptions = {
       threshold: {
-        numBlocks: this.configService.get<number>("indexer.threshold.numBlocks")!,
-        numVins: this.configService.get<number>("indexer.threshold.numVins")!,
-        numVouts: this.configService.get<number>("indexer.threshold.numVouts")!,
+        numBlocks: this.configService.getOrThrow<number>("indexer.threshold.numBlocks"),
+        numVins: this.configService.getOrThrow<number>("indexer.threshold.numVins"),
+        numVouts: this.configService.getOrThrow<number>("indexer.threshold.numVouts"),
       },
     };
     const fromBlockHeight = indexerBlockHeight + 1;

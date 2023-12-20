@@ -96,8 +96,6 @@ export class IndexerService {
       }
 
       currentBlockHeight -= 1;
-      // eslint-disable-next-line no-continue
-      continue;
     }
 
     const msg =
@@ -121,7 +119,9 @@ export class IndexerService {
 
   private async handleBlock(block: Block<2>) {
     // Lazy address promises, resolve the address lookup later by concurent process
-    const voutsAddressPromisesLimiter = promiseLimiter<string[]>(this.configService.get<number>("voutPromiseLimiter")!);
+    const voutsAddressPromisesLimiter = promiseLimiter<string[]>(
+      this.configService.getOrThrow<number>("voutPromiseLimiter"),
+    );
 
     // Use a native loop instead of a 'for-of' loop for performance reasons
     for (let i = 0; i < block.tx.length; i += 1) {
@@ -196,7 +196,7 @@ export class IndexerService {
         });
       },
       {
-        timeout: this.configService.get<number>("indexer.transactionTimeout")!,
+        timeout: this.configService.getOrThrow<number>("indexer.transactionTimeout"),
       },
     );
     this.logger.log(`[INDEXER|COMMIT] executing commit data, took ${dbTxTs.now} s`);
@@ -225,7 +225,7 @@ export class IndexerService {
         });
       },
       {
-        timeout: this.configService.get<number>("indexer.transactionTimeout")!,
+        timeout: this.configService.getOrThrow<number>("indexer.transactionTimeout"),
       },
     );
     this.logger.log(`[INDEXER|REORG] executing reorg, took ${dbTxTs.now} s`);
