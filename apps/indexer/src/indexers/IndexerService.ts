@@ -209,10 +209,12 @@ export class IndexerService {
     const dbTxTs = perf();
     await this.prisma.$transaction(
       async (prismaTx) => {
+        const reorgPromises = [];
         for (let i = 0; i < this.handlers.length; i += 1) {
           const fromBlockHeight = lastHealthyBlockHeight + 1;
-          await this.handlers[i].reorg(fromBlockHeight, prismaTx);
+          reorgPromises.push(this.handlers[i].reorg(fromBlockHeight, prismaTx));
         }
+        await Promise.all(reorgPromises);
 
         // Set the last healthy indexed block into db
         await prismaTx.indexer.update({
