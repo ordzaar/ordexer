@@ -1,7 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { BitcoinService, Block } from "src/bitcoin/BitcoinService";
-import { isCoinbaseTx } from "src/bitcoin/utils/Transaction";
+import { BitcoinService, Block, isCoinbaseTx } from "@ordzaar/rpcservices";
 import { perf } from "src/utils/Log";
 import { promiseLimiter } from "src/utils/Promise";
 

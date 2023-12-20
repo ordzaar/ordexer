@@ -1,4 +1,4 @@
-import { ScriptPubKey } from "src/bitcoin/BitcoinService";
+import { ScriptPubKey } from "@ordzaar/rpcservices";
 
 export const INDEXER_LAST_HEIGHT_KEY = "last_height";
 

@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/ban-types */
+/* eslint-disable consistent-return */
+import { OrdInscription, RawTransaction } from "@ordzaar/rpcservices";
 import { PrismaClient } from "@prisma/client";
 import { ITXClientDenyList, Omit } from "@prisma/client/runtime/library";
 import { networks } from "bitcoinjs-lib";
 
-import { RawTransaction } from "../../bitcoin/BitcoinService";
-import { OrdInscription } from "../../ord/providers/OrdProvider";
 import { VinData } from "../types";
 import { Envelope } from "./Envelope";
 import { parseLocation } from "./Transaction";
