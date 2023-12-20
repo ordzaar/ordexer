@@ -4,7 +4,7 @@ import { networks } from "bitcoinjs-lib";
 
 @Injectable()
 export class OrdProvider {
-  private readonly logger = new Logger(OrdProvider.name);
+  private readonly logger;
 
   constructor(private readonly configService: ConfigService) {
     this.logger = new Logger(OrdProvider.name);

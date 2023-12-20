@@ -1,12 +1,18 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import * as retry from "async-retry";
 import { networks } from "bitcoinjs-lib";
 
+import { sleep } from "../utils/Sleep";
 import { extractAddress } from "./utils/Address";
 
 @Injectable()
 export class BitcoinService {
-  constructor(private readonly configService: ConfigService) {}
+  private readonly logger;
+
+  constructor(private readonly configService: ConfigService) {
+    this.logger = new Logger(BitcoinService.name);
+  }
 
   async rpc<R>(method: string, params: any[] = []): Promise<R> {
     const userPassBase64 = Buffer.from(
@@ -27,9 +33,28 @@ export class BitcoinService {
       }),
     };
 
-    const response = await fetch(
-      `${this.configService.get<string>("bitcoinRpc.uri")}:${this.configService.get<string>("bitcoinRpc.port")}`!,
-      requestOptions,
+    const response: Response = await retry(
+      async () => {
+        try {
+          const res: Response = await fetch(
+            `${this.configService.get<string>("bitcoinRpc.uri")}:${this.configService.get<string>("bitcoinRpc.port")}`!,
+            requestOptions,
+          );
+
+          if (res.status === 503) {
+            throw new Error(`RPC request failed with status ${res.status}`);
+          }
+
+          return res;
+        } catch (error) {
+          this.logger.error(`RPC request failed with error: ${error}`);
+          await sleep(5);
+          throw error;
+        }
+      },
+      {
+        forever: true,
+      },
     );
 
     if (response.status !== 200) {
