@@ -12,15 +12,16 @@ export class BitcoinService {
   }
 
   async rpc<R>(method: string, params: any[] = []): Promise<R> {
+    const userPassBase64 = Buffer.from(
+      `${this.configService.get<string>("bitcoinRpc.user")}:${this.configService.get<string>("bitcoinRpc.password")}`,
+    ).toString("base64");
+    const authorization = `Basic ${userPassBase64}`;
+
     const requestOptions = {
       method: "POST",
       headers: {
         "Content-Type": "text/plain",
-        Authorization: `Basic ${Buffer.from(
-          `${this.configService.get<string>("bitcoinRpc.user")}:${this.configService.get<string>(
-            "bitcoinRpc.password",
-          )}`,
-        ).toString("base64")}`,
+        Authorization: authorization,
       },
       body: JSON.stringify({
         jsonrpc: "1.0",
