@@ -1,15 +1,11 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 
 import { extractAddress } from "./utils/Address";
 
 @Injectable()
 export class BitcoinService {
-  private readonly logger = new Logger(BitcoinService.name);
-
-  constructor(private readonly configService: ConfigService) {
-    this.logger = new Logger(BitcoinService.name);
-  }
+  constructor(private readonly configService: ConfigService) {}
 
   async rpc<R>(method: string, params: any[] = []): Promise<R> {
     const userPassBase64 = Buffer.from(
