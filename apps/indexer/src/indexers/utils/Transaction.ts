@@ -3,6 +3,5 @@ export function parseLocation(location: string): [string, number] {
   if (txid === undefined || vout === undefined) {
     throw new Error(`Failed to parse location ${location}`);
   }
-  // eslint-disable-next-line radix
-  return [txid, parseInt(vout)];
+  return [txid, parseInt(vout, 10)];
 }

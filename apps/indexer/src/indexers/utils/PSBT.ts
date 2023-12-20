@@ -15,7 +15,6 @@ const bitcoinService = new BitcoinService(new ConfigService());
  *
  * @returns The PSBT or undefined if it could not be parsed.
  */
-// eslint-disable-next-line consistent-return
 export function decodePsbt(psbt: string): Psbt | undefined {
   const network = getBitcoinNetwork();
   try {
@@ -32,6 +31,7 @@ export function decodePsbt(psbt: string): Psbt | undefined {
     //       parse the base64.
     // not a PSBT base64 offer
   }
+  return undefined;
 }
 
 /**
@@ -132,7 +132,7 @@ export function getPsbtAsJSON(psbt: Psbt) {
         };
       } else {
         // eslint-disable-next-line prefer-template
-        throw new Error("Could not get input of #" + index);
+        throw new Error(`Could not get input of #${index}`);
       }
     }),
     outputs: psbt.txOutputs.map((o) => ({

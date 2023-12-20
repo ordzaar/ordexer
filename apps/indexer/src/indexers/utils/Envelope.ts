@@ -1,4 +1,3 @@
-/* eslint-disable consistent-return */
 import { script } from "bitcoinjs-lib";
 
 import { RawTransaction } from "../../bitcoin/BitcoinService";
@@ -66,6 +65,7 @@ export class Envelope {
     if (data) {
       return new Envelope(tx.txid, data, oip);
     }
+    return undefined;
   }
 
   static fromTxinWitness(txid: string, txinwitness: string[]): Envelope | undefined {
@@ -73,6 +73,7 @@ export class Envelope {
     if (data) {
       return new Envelope(txid, data, oip);
     }
+    return undefined;
   }
 
   get isValid() {
@@ -193,6 +194,7 @@ function getEnvelopeDataFromTx(tx: RawTransaction): [EnvelopeData[]?, any?] | un
       return getEnvelopeFromTxinWitness(vin.txinwitness);
     }
   }
+  return undefined;
 }
 
 function getEnvelopeFromTxinWitness(txinwitness: string[]): [EnvelopeData[]?, any?] | undefined {
@@ -209,6 +211,7 @@ function getEnvelopeFromTxinWitness(txinwitness: string[]): [EnvelopeData[]?, an
       }
     }
   }
+  return undefined;
 }
 
 /**

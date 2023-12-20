@@ -38,15 +38,7 @@ export class BitcoinService {
       throw new Error(`RPC request failed with status ${response.status}`);
     }
 
-    const text = await response.text();
-
-    let json: any;
-
-    try {
-      json = JSON.parse(text);
-    } catch (error) {
-      throw new Error(`bitcoin rcp error: ${text}`);
-    }
+    const json: any = await response.json();
 
     return json.result;
   }
@@ -87,7 +79,7 @@ export class BitcoinService {
 
   // method
 
-  async getAddressessFromVout(vout: Vout) {
+  async getAddressesFromVout(vout: Vout) {
     if (vout.scriptPubKey.address !== undefined) {
       return [vout.scriptPubKey.address];
     }

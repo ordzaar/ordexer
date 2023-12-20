@@ -34,7 +34,7 @@ export class OutputHandler extends BaseIndexerHandler {
     vouts: VoutData[],
     prismaTx: Omit<PrismaClient, ITXClientDenyList>,
   ): Promise<void> {
-    this.logger.log("[OUTPUT_HANDLER|COMMIT] commiting output..");
+    this.logger.log("[OUTPUT_HANDLER|COMMIT] Committing output..");
 
     // Outputs are inserted in chunks to improve performance
     // Chunk size is defined in config

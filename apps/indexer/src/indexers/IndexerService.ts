@@ -145,7 +145,7 @@ export class IndexerService {
       }
 
       for (let j = 0; j < block.tx[i].vout.length; j += 1) {
-        voutsAddressPromisesLimiter.push(async () => this.bitcoinService.getAddressessFromVout(block.tx[i].vout[j]));
+        voutsAddressPromisesLimiter.push(async () => this.bitcoinService.getAddressesFromVout(block.tx[i].vout[j]));
 
         this.vouts.push({
           txid: block.tx[i].txid,
