@@ -1,9 +1,8 @@
 import { ConfigService } from "@nestjs/config";
-import { address, Psbt, Transaction } from "bitcoinjs-lib";
+import { address, networks, Psbt, Transaction } from "bitcoinjs-lib";
 
 import { BitcoinService } from "../../bitcoin/BitcoinService";
 import { btcToSat } from "./Bitcoin";
-import { getBitcoinNetwork } from "./Network";
 
 const bitcoinService = new BitcoinService(new ConfigService());
 
@@ -15,8 +14,7 @@ const bitcoinService = new BitcoinService(new ConfigService());
  *
  * @returns The PSBT or undefined if it could not be parsed.
  */
-export function decodePsbt(psbt: string): Psbt | undefined {
-  const network = getBitcoinNetwork();
+export function decodePsbt(psbt: string, network: networks.Network): Psbt | undefined {
   try {
     return Psbt.fromHex(psbt, { network });
   } catch (err) {
@@ -99,8 +97,7 @@ export async function getPsbtFee(psbt: Psbt): Promise<number> {
  *
  * @returns PSBT as a JSON object.
  */
-export function getPsbtAsJSON(psbt: Psbt) {
-  const network = getBitcoinNetwork();
+export function getPsbtAsJSON(psbt: Psbt, network: networks.Network) {
   return {
     inputs: psbt.data.inputs.map((input, index) => {
       const txid = psbt.txInputs[index].hash.reverse().toString("hex");

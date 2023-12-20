@@ -2,12 +2,24 @@
 /* eslint-disable consistent-return */
 import { PrismaClient } from "@prisma/client";
 import { ITXClientDenyList, Omit } from "@prisma/client/runtime/library";
+import { networks } from "bitcoinjs-lib";
 
 import { RawTransaction } from "../../bitcoin/BitcoinService";
 import { OrdInscription } from "../../ord/providers/OrdProvider";
 import { VinData } from "../types";
 import { Envelope } from "./Envelope";
 import { parseLocation } from "./Transaction";
+
+export async function getInscriptionEpochBlock(network: networks.Network): Promise<number> {
+  switch (network) {
+    case networks.bitcoin:
+      return 767_429;
+    case networks.testnet:
+      return 2_413_342;
+    default:
+      return 0;
+  }
+}
 
 export class Inscription {
   readonly id: string;

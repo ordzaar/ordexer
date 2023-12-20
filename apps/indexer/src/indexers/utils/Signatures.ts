@@ -1,7 +1,7 @@
+import { networks } from "bitcoinjs-lib";
 import { verify } from "bitcoinjs-message";
 
 import { getAddresses } from "./Bip32";
-import { getBitcoinNetwork } from "./Network";
 import { decodePsbt, getPsbtAsJSON } from "./PSBT";
 
 /**
@@ -13,12 +13,12 @@ import { decodePsbt, getPsbtAsJSON } from "./PSBT";
  * @param signature - Encoded PSBT to validate.
  * @param location  - Location to be confirmed in the first input of the PSBT.
  */
-export function validatePSBTSignature(signature: string, location: string): boolean {
-  const psbt = decodePsbt(signature);
+export function validatePSBTSignature(signature: string, location: string, network: networks.Network): boolean {
+  const psbt = decodePsbt(signature, network);
   if (psbt === undefined) {
     return false;
   }
-  const input = getPsbtAsJSON(psbt).inputs[0];
+  const input = getPsbtAsJSON(psbt, network).inputs[0];
   if (input === undefined) {
     return false;
   }
@@ -39,9 +39,14 @@ export function validatePSBTSignature(signature: string, location: string): bool
  * @param signature - Signature to verify.
  * @param network   - Network the signature was signed for.
  */
-export function validateOrditSignature(message: string, key: string, signature: string): boolean {
+export function validateOrditSignature(
+  message: string,
+  key: string,
+  signature: string,
+  network: networks.Network,
+): boolean {
   // eslint-disable-next-line @typescript-eslint/no-shadow
-  const address = getAddresses(key, getBitcoinNetwork()).find((address) => address.format === "legacy");
+  const address = getAddresses(key, network).find((address) => address.format === "legacy");
   if (address === undefined) {
     return false;
   }

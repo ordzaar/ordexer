@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { getBitcoinNetwork } from "src/indexers/utils/Network";
+import { networks } from "bitcoinjs-lib";
 
 import { extractAddress } from "./utils/Address";
 
@@ -39,6 +39,20 @@ export class BitcoinService {
     const json: any = await response.json();
 
     return json.result;
+  }
+
+  async getBitcoinNetwork() {
+    const network = this.configService.get<"mainnet" | "testnet" | "regtest">("network")!;
+    switch (network) {
+      case "mainnet":
+        return networks.bitcoin;
+      case "testnet":
+        return networks.testnet;
+      case "regtest":
+        return networks.regtest;
+      default:
+        throw new Error(`Invalid network config: ${network}`);
+    }
   }
 
   // rpc
@@ -84,11 +98,8 @@ export class BitcoinService {
     if (vout.scriptPubKey.addresses) {
       return vout.scriptPubKey.addresses;
     }
-
-    const address = extractAddress(
-      Buffer.from(vout.scriptPubKey.hex, "hex"),
-      getBitcoinNetwork(this.configService.getOrThrow<string>("network")),
-    );
+    const network = await this.getBitcoinNetwork();
+    const address = extractAddress(Buffer.from(vout.scriptPubKey.hex, "hex"), network);
     if (address !== undefined) {
       return [address];
     }

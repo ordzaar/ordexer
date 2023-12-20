@@ -1,5 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import { networks } from "bitcoinjs-lib";
 
 @Injectable()
 export class OrdProvider {
@@ -33,6 +34,20 @@ export class OrdProvider {
     }
 
     return response.json() as R;
+  }
+
+  async getBitcoinNetwork() {
+    const network = this.configService.get<"mainnet" | "testnet" | "regtest">("network")!;
+    switch (network) {
+      case "mainnet":
+        return networks.bitcoin;
+      case "testnet":
+        return networks.testnet;
+      case "regtest":
+        return networks.regtest;
+      default:
+        throw new Error(`Invalid network config: ${network}`);
+    }
   }
 
   async getHeight(): Promise<number> {

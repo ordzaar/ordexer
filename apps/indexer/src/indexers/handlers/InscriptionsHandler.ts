@@ -5,8 +5,11 @@ import { ITXClientDenyList, Omit } from "@prisma/client/runtime/library";
 import { OrdInscription, OrdProvider } from "../../ord/providers/OrdProvider";
 import { VinData, VoutData } from "../types";
 import { Envelope } from "../utils/Envelope";
-import { getInscriptionFromEnvelope, Inscription as RawInscription } from "../utils/Inscription";
-import { INSCRIPTION_EPOCH_BLOCK } from "../utils/Network";
+import {
+  getInscriptionEpochBlock,
+  getInscriptionFromEnvelope,
+  Inscription as RawInscription,
+} from "../utils/Inscription";
 import { isOIP2Meta, validateOIP2Meta } from "../utils/Oip";
 import { parseLocation } from "../utils/Transaction";
 import { BaseIndexerHandler } from "./BaseHandler";
@@ -36,7 +39,8 @@ export class InscriptionHandler extends BaseIndexerHandler {
     _: VoutData[],
     prismaTx: Omit<PrismaClient, ITXClientDenyList>,
   ): Promise<void> {
-    if (lastBlockHeight < INSCRIPTION_EPOCH_BLOCK) {
+    const inscriptionEpoch = await getInscriptionEpochBlock(await this.ord.getBitcoinNetwork());
+    if (lastBlockHeight < inscriptionEpoch) {
       this.logger.log("[INSCRIPTION_HANDLER|COMMIT] Indexer has not passed inscriptions epoch block");
       return;
     }
@@ -115,6 +119,7 @@ export class InscriptionHandler extends BaseIndexerHandler {
    * @param prismaTx - prisma transaction
    */
   async insertInscriptions(rawInscriptions: RawInscription[], prismaTx: Omit<PrismaClient, ITXClientDenyList>) {
+    const network = await this.ord.getBitcoinNetwork();
     const inscriptions: Inscription[] = [];
 
     // eslint-disable-next-line no-restricted-syntax
@@ -150,7 +155,7 @@ export class InscriptionHandler extends BaseIndexerHandler {
       if (inscription.oip) {
         entry.meta = inscription.oip;
         if (isOIP2Meta(inscription.oip)) {
-          entry.verified = await validateOIP2Meta(prismaTx, inscription.oip);
+          entry.verified = await validateOIP2Meta(network, prismaTx, inscription.oip);
         }
       }
 

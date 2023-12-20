@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-types */
 import { PrismaClient } from "@prisma/client";
 import { ITXClientDenyList, Omit } from "@prisma/client/runtime/library";
-import { script } from "bitcoinjs-lib";
+import { networks, script } from "bitcoinjs-lib";
 
 import { validateCoreSignature, validateOrditSignature } from "./Signatures";
 
@@ -73,7 +73,11 @@ export function getMetaFromWitness(txinwitness: string[]): Object | undefined {
   }
 }
 
-export async function validateOIP2Meta(prismaTx: Omit<PrismaClient, ITXClientDenyList>, meta?: any): Promise<boolean> {
+export async function validateOIP2Meta(
+  network: networks.Network,
+  prismaTx: Omit<PrismaClient, ITXClientDenyList>,
+  meta?: any,
+): Promise<boolean> {
   if (meta === undefined || !isOIP2Meta(meta)) {
     return false;
   }
@@ -95,7 +99,7 @@ export async function validateOIP2Meta(prismaTx: Omit<PrismaClient, ITXClientDen
   }
   const message = `${meta.col} ${meta.iid} ${meta.nonce}`;
   try {
-    const valid = validateOrditSignature(message, meta.publ, meta.sig);
+    const valid = validateOrditSignature(message, meta.publ, meta.sig, network);
     if (valid === true) {
       return true;
     }
