@@ -1,5 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { OrdInscription, OrdProvider } from "@ordzaar/rpcservices";
+import { OrdInscription, OrdProvider, parseLocation } from "@ordzaar/rpcservices";
 import { PrismaClient } from "@prisma/client";
 import { ITXClientDenyList, Omit } from "@prisma/client/runtime/library";
 
@@ -12,7 +12,6 @@ import {
   Inscription as RawInscription,
 } from "../utils/Inscription";
 import { isOIP2Meta, validateOIP2Meta } from "../utils/Oip";
-import { parseLocation } from "../utils/Transaction";
 import { BaseIndexerHandler } from "./BaseHandler";
 
 @Injectable()
