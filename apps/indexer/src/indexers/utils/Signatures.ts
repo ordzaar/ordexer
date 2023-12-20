@@ -45,8 +45,7 @@ export function validateOrditSignature(
   signature: string,
   network: networks.Network,
 ): boolean {
-  // eslint-disable-next-line @typescript-eslint/no-shadow
-  const address = getAddresses(key, network).find((address) => address.format === "legacy");
+  const address = getAddresses(key, network).find((addr) => addr.format === "legacy");
   if (address === undefined) {
     return false;
   }

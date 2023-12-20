@@ -131,8 +131,9 @@ function getEnvelopeContent(data: EnvelopeData[]) {
     return undefined;
   }
   const content: Buffer[] = [];
+  const dataSlice = data.slice(startIndex + 1);
   // eslint-disable-next-line no-restricted-syntax
-  for (const op of data.slice(startIndex + 1)) {
+  for (const op of dataSlice) {
     if (!isBuffer(op)) {
       break;
     }

@@ -40,11 +40,12 @@ export function getMetaFromWitness(txinwitness: string[]): Object | undefined {
 
   let startIndex = -1;
   let endIndex = -1;
+  const endIndexMarker = "104";
 
   for (let i = 0; i < chunks.length; i += 1) {
     if (chunks[i] === "application/json;charset=utf-8") {
       startIndex = i + 2; // skip the OP pushes after metadata mime-type itself
-    } else if (chunks[i] === "104") {
+    } else if (chunks[i] === endIndexMarker) {
       endIndex = i;
     }
   }
