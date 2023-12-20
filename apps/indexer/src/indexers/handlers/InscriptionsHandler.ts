@@ -37,11 +37,11 @@ export class InscriptionHandler extends BaseIndexerHandler {
     prismaTx: Omit<PrismaClient, ITXClientDenyList>,
   ): Promise<void> {
     if (lastBlockHeight < INSCRIPTION_EPOCH_BLOCK) {
-      this.logger.log("inscriptions indexer has not passed epoch block");
+      this.logger.log("[INSCRIPTION_HANDLER|COMMIT] Indexer has not passed inscriptions epoch block");
       return;
     }
 
-    this.logger.log("[INSCRIPTION_HANDLER|COMMIT] commiting insription..");
+    this.logger.log("[INSCRIPTION_HANDLER|COMMIT] Committing inscription..");
 
     // Wait for the block to be indexed by Ord Server
     // Ord server may be slightly behind the Bitcoin Node as it needs to index new blocks
