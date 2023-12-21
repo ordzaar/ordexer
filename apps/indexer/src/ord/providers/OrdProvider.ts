@@ -52,7 +52,7 @@ export class OrdProvider {
       throw new Error(`ORD request failed with status ${response.status}`);
     }
 
-    return response.data.result as R;
+    return response.data as R;
   }
 
   async getBitcoinNetwork() {
