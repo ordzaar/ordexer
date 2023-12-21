@@ -80,7 +80,6 @@ export class BitcoinService {
     }
   }
 
-  // rpc
   async getBlockHash(height: number): Promise<string> {
     return this.rpc<string>("getblockhash", [height]);
   }
@@ -113,8 +112,6 @@ export class BitcoinService {
     }
     return this.rpc<string[]>("deriveaddresses", args);
   }
-
-  // method
 
   async getAddressesFromVout(vout: Vout) {
     if (vout.scriptPubKey.address !== undefined) {

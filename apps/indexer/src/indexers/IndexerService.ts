@@ -170,7 +170,7 @@ export class IndexerService {
   }
 
   private async commitVinVout(lastBlockHeight: number) {
-    this.logger.log(`[INDEXER|COMMIT] commiting block: ${lastBlockHeight}..`);
+    this.logger.log(`[INDEXER|COMMIT] committing block: ${lastBlockHeight}..`);
     this.logger.log(`[INDEXER|COMMIT] total vins: ${this.vins.length}`);
     this.logger.log(`[INDEXER|COMMIT] total vouts: ${this.vouts.length}`);
 

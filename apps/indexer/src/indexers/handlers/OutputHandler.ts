@@ -20,7 +20,7 @@ export class OutputHandler extends BaseIndexerHandler {
 
   /**
    * Commits chunk of vouts and vins to the database.
-   * We use transactions in commiting. If any of the queries fail, the whole transaction is rolled back.
+   * We use transactions in committing. If any of the queries fail, the whole transaction is rolled back.
    * This ensures that we don't have any partial data in the database, which may cause future issues. For example, an output that has an unsuccessfully commit vin may be returned as spendable.
    *
    * @param lastBlockHeight - height of the last block in the chunk
