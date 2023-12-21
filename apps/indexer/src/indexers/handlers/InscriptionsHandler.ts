@@ -3,6 +3,7 @@ import { PrismaClient } from "@prisma/client";
 import { ITXClientDenyList, Omit } from "@prisma/client/runtime/library";
 
 import { OrdInscription, OrdProvider } from "../../ord/providers/OrdProvider";
+import { perf } from "../../utils/Log";
 import { VinData, VoutData } from "../types";
 import { Envelope } from "../utils/Envelope";
 import {
@@ -45,7 +46,8 @@ export class InscriptionHandler extends BaseIndexerHandler {
       return;
     }
 
-    this.logger.log("[INSCRIPTION_HANDLER|COMMIT] Committing inscription..");
+    this.logger.log("[INSCRIPTION_HANDLER|COMMIT] Committing inscriptions..");
+    const insertingInscriptionsTs = perf();
 
     // Wait for the block to be indexed by Ord Server
     // Ord server may be slightly behind the Bitcoin Node as it needs to index new blocks
@@ -57,11 +59,20 @@ export class InscriptionHandler extends BaseIndexerHandler {
     // Inserts new inscriptions into the database
     await this.insertInscriptions(inscriptions, prismaTx);
 
+    this.logger.log(
+      `[INSCRIPTION_HANDLER|COMMIT] Inserted ${inscriptions.length} inscriptions in ${insertingInscriptionsTs.now}s`,
+    );
+
+    this.logger.log("[INSCRIPTION_HANDLER|COMMIT] Updating inscriptions..");
+
+    const updatingInscriptionsTs = perf();
     // Updates inscriptions that have been transferred to new owners
     await this.transferInscriptions(
       vins.map(({ vout }) => `${vout.txid}:${vout.n}`),
       prismaTx,
     );
+
+    this.logger.log(`[INSCRIPTION_HANDLER|COMMIT] Updated inscriptions in ${updatingInscriptionsTs.now}s`);
   }
 
   async reorg(fromHeight: number, prismaTx: Omit<PrismaClient, ITXClientDenyList>): Promise<void> {

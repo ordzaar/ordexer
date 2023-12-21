@@ -34,7 +34,7 @@ export class OutputHandler extends BaseIndexerHandler {
     vouts: VoutData[],
     prismaTx: Omit<PrismaClient, ITXClientDenyList>,
   ): Promise<void> {
-    this.logger.log("[OUTPUT_HANDLER|COMMIT] Committing output..");
+    this.logger.log("[OUTPUT_HANDLER|COMMIT] Inserting outputs from vouts..");
 
     // Outputs are inserted in chunks to improve performance
     // Chunk size is defined in config
@@ -65,8 +65,10 @@ export class OutputHandler extends BaseIndexerHandler {
     }
     await Promise.all(outputPrismaPromises);
     this.logger.log(
-      `[OUTPUT_HANDLER|COMMIT] inserting ${vouts.length} data to output tx, took ${insertingOutputsTs.now} s`,
+      `[OUTPUT_HANDLER|COMMIT] Inserted ${vouts.length} new outputs to Outputs Table, took ${insertingOutputsTs.now}s`,
     );
+
+    this.logger.log("[OUTPUT_HANDLER|COMMIT] Updating outputs with vins..");
 
     // Update spent outputs by looping vins
     // This updates an output whose vout was inserted in the past
@@ -100,7 +102,7 @@ export class OutputHandler extends BaseIndexerHandler {
     }
     await updatePromiseLimiter.run();
     this.logger.log(
-      `[OUTPUT_HANDLER|COMMIT] updating ${vins.length} data to output tx, took ${updatingOutputsTs.now} s`,
+      `[OUTPUT_HANDLER|COMMIT] Updated ${vins.length} outputs in Outputs table, took ${updatingOutputsTs.now}s`,
     );
   }
 
