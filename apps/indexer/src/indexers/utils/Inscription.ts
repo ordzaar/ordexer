@@ -115,7 +115,7 @@ type InscriptionMedia = {
     type: string;
     subtype: string;
   };
-  content: string;
+  content: Buffer;
   size: number;
 };
 
@@ -145,7 +145,7 @@ export async function getInscriptionFromEnvelope(
         type: envelope.media.mimeType,
         subtype: envelope.media.mimeSubtype,
       },
-      content: envelope.content?.body ?? "",
+      content: envelope.content?.body ?? Buffer.alloc(0),
       size: envelope.content?.size ?? 0,
     },
     number: ordData.number,

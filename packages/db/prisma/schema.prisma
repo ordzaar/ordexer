@@ -56,7 +56,8 @@ model Inscription {
   mediaCharset      String
   mediaSize         Int
   // Media Content is split into a separate table keep Inscription table small
-  mediaContent      MediaContent?
+  mediaContent      MediaContent          @relation(fields: [mediaContentId], references: [id])
+  mediaContentId    String                @unique
   timestamp         Int
   height            Int
   fee               Int
@@ -64,7 +65,7 @@ model Inscription {
   number            Int
   sequence          Int
   outpoint          String
-  ethereum          String
+  ethereum          String?
   verified          Boolean?
   meta              Json?
   ometa             Json?
@@ -81,8 +82,7 @@ model Inscription {
 
 model MediaContent {
   id                String              @id @default(uuid())
-  inscription       Inscription         @relation(fields: [inscriptionId], references: [id])
-  inscriptionId     String              @unique
+  inscription       Inscription?
 
   // Bytestring of the media content
   content           Bytes

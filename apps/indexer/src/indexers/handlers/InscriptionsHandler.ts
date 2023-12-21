@@ -132,6 +132,12 @@ export class InscriptionHandler extends BaseIndexerHandler {
           },
         },
       });
+      const mediaContent: MediaContent = await prismaTx.mediaContent.create({
+        data: {
+          content: inscription.media.content,
+        },
+      });
+
       const entry: Partial<Inscription> = {
         inscriptionId: inscription.id,
         creator: inscription.creator,
@@ -142,12 +148,13 @@ export class InscriptionHandler extends BaseIndexerHandler {
         mediaType: inscription.media.type,
         mediaCharset: inscription.media.charset,
         mediaSize: inscription.media.size,
-        mediaContent: inscription.media.content,
+        mediaContentId: mediaContent.id,
         timestamp: inscription.timestamp,
         height: inscription.height,
         fee: inscription.fee,
         genesis: inscription.genesis,
         number: inscription.number,
+        sequence: inscription.sequence,
         outpoint: inscription.outpoint,
         ometa: inscription.meta,
         outputId: output.id,
@@ -241,6 +248,11 @@ export class InscriptionHandler extends BaseIndexerHandler {
   }
 }
 
+export type MediaContent = {
+  id: string;
+  content: Buffer;
+};
+
 export type Inscription = {
   inscriptionId: string;
   parent?: string;
@@ -253,7 +265,7 @@ export type Inscription = {
   mediaType: string;
   mediaCharset: string;
   mediaSize: number;
-  mediaContent: string;
+  mediaContentId: string;
   timestamp: number;
   height: number;
   fee: number;

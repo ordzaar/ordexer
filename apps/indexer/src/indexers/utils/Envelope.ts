@@ -28,7 +28,7 @@ export class Envelope {
 
   readonly content?: {
     size: number;
-    body: string;
+    body: Buffer;
   };
 
   readonly media: {
@@ -139,10 +139,10 @@ function getEnvelopeContent(data: EnvelopeData[]) {
     }
     content.push(op);
   }
-  const buffer = Buffer.concat(content);
+  const buffer: Buffer = Buffer.concat(content);
   return {
     size: buffer.length,
-    body: buffer.toString("base64"),
+    body: buffer,
   };
 }
 
