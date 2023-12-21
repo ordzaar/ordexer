@@ -28,10 +28,7 @@ import { VersionModule } from "./version/VersionModule";
     OrdModule,
     VersionModule,
   ],
-  controllers: [
-    OrdTestController,
-    RpcTestController,
-  ],
+  controllers: [OrdTestController, RpcTestController],
   providers: [
     {
       provide: APP_GUARD,
