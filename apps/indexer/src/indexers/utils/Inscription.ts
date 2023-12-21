@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/ban-types */
-/* eslint-disable consistent-return */
 import { PrismaClient } from "@prisma/client";
 import { ITXClientDenyList, Omit } from "@prisma/client/runtime/library";
 import { networks } from "bitcoinjs-lib";
@@ -73,18 +72,20 @@ export class Inscription {
     this.oip = data.oip;
   }
 
-  static async fromTransaction(tx: RawTransaction) {
+  static async fromTransaction(tx: RawTransaction): Promise<Envelope | undefined> {
     const envelope = Envelope.fromTransaction(tx);
     if (envelope && envelope.isValid) {
       return envelope;
     }
+    return undefined;
   }
 
-  static async fromVin(vin: VinData) {
+  static async fromVin(vin: VinData): Promise<Envelope | undefined> {
     const envelope = Envelope.fromTxinWitness(vin.txid, vin.witness);
     if (envelope && envelope.isValid) {
       return envelope;
     }
+    return undefined;
   }
 }
 

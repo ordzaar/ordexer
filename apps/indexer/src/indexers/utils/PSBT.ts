@@ -115,8 +115,8 @@ export function getPsbtAsJSON(psbt: Psbt, network: networks.Network) {
           value: input.witnessUtxo.value,
           signed,
         };
-        // eslint-disable-next-line no-else-return
-      } else if (input.nonWitnessUtxo) {
+      }
+      if (input.nonWitnessUtxo) {
         const txin = psbt.txInputs[index];
         const txout = Transaction.fromBuffer(input.nonWitnessUtxo).outs[txin.index];
         return {
@@ -127,10 +127,8 @@ export function getPsbtAsJSON(psbt: Psbt, network: networks.Network) {
           value: txout.value,
           signed,
         };
-      } else {
-        // eslint-disable-next-line prefer-template
-        throw new Error(`Could not get input of #${index}`);
       }
+      throw new Error(`Could not get input of #${index}`);
     }),
     outputs: psbt.txOutputs.map((o) => ({
       address: o.address,
