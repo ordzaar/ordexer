@@ -1,12 +1,17 @@
+import { HttpService } from "@nestjs/axios";
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import { AxiosResponse } from "axios";
 import { networks } from "bitcoinjs-lib";
 
 @Injectable()
 export class OrdProvider {
   private readonly logger;
 
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly httpService: HttpService,
+  ) {
     this.logger = new Logger(OrdProvider.name);
   }
 
@@ -24,16 +29,30 @@ export class OrdProvider {
       requestOptions.headers["Content-Type"] = "application/json";
     }
 
-    const response = await fetch(
-      `${this.configService.get<string>("ord.uri")}:${this.configService.get<string>("ord.port")}${path}`,
-      requestOptions,
-    );
+    let response: AxiosResponse;
+
+    if (requestOptions.method === "POST") {
+      response = await this.httpService.axiosRef.post(
+        `${this.configService.get<string>("ord.uri")}:${this.configService.get<string>("ord.port")}${path}`,
+        requestOptions.body,
+        {
+          headers: requestOptions.headers,
+        },
+      );
+    } else {
+      response = await this.httpService.axiosRef.get(
+        `${this.configService.get<string>("ord.uri")}:${this.configService.get<string>("ord.port")}${path}`,
+        {
+          headers: requestOptions.headers,
+        },
+      );
+    }
 
     if (response.status !== 200) {
       throw new Error(`ORD request failed with status ${response.status}`);
     }
 
-    return response.json() as R;
+    return response.data.result as R;
   }
 
   async getBitcoinNetwork() {
