@@ -8,14 +8,14 @@ export class RpcProvider {
   constructor(private readonly configService: ConfigService) {
     this.logger = new Logger(RpcProvider.name);
   }
-  
-  async rpc<R> (method: string, params: any[] = []): Promise<R> {
+
+  async rpc<R>(method: string, params: any[] = []): Promise<R> {
     const requestOptions = {
       method: "POST",
       headers: {
         "Content-Type": "text/plain",
         Authorization: `Basic ${Buffer.from(
-          `${this.configService.get<string>("rpcUser")}:${this.configService.get<string>("rpcPassword")}`
+          `${this.configService.get<string>("rpcUser")}:${this.configService.get<string>("rpcPassword")}`,
         ).toString("base64")}`,
       },
       body: JSON.stringify({
@@ -25,17 +25,14 @@ export class RpcProvider {
       }),
     };
 
-    const response = await fetch(
-      this.configService.get<string>("rpcUri")!,
-      requestOptions
-    );
-    
+    const response = await fetch(this.configService.get<string>("rpcUri")!, requestOptions);
+
     if (response.status !== 200) {
       throw new Error(`RPC request failed with status ${response.status}`);
     }
 
     const text = await response.text();
-    
+
     let json: any;
 
     try {

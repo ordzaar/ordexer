@@ -2,7 +2,6 @@ import { Controller, Get, Param } from "@nestjs/common";
 
 import { RpcProvider } from "./bitcoinrpc/providers/RpcProvider";
 
-
 @Controller("rpctest")
 export class RpcTestController {
   constructor(private rpc: RpcProvider) {}
