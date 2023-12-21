@@ -49,21 +49,24 @@ model Inscription {
   outputId          String
   creator           String
   owner             String?
-  sat               Int
+  sat               BigInt
   mimeType          String
   mimeSubtype       String
   mediaType         String
   mediaCharset      String
+  // Media Size in bytes. Int4 is sufficient, should not exceed 2GB.
   mediaSize         Int
   // Media Content is split into a separate table keep Inscription table small
   mediaContent      MediaContent          @relation(fields: [mediaContentId], references: [id])
   mediaContentId    String                @unique
+  // To the engineer changing timestamp to BigInt, best of luck! Long live Ordzaar!
   timestamp         Int
   height            Int
   fee               Int
   genesis           String
-  number            Int
-  sequence          Int
+  // In case the number of Ordinals exceed 2B
+  number            BigInt
+  sequence          BigInt
   outpoint          String
   ethereum          String?
   verified          Boolean?
