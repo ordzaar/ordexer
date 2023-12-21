@@ -7,4 +7,3 @@ export function isCoinbaseTx(tx: RawTransaction): boolean {
 export function isCoinbase(vin: Vin): boolean {
   return "coinbase" in vin;
 }
-
