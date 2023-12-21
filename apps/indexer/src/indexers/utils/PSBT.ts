@@ -1,10 +1,11 @@
+import { HttpService } from "@nestjs/axios";
 import { ConfigService } from "@nestjs/config";
 import { address, networks, Psbt, Transaction } from "bitcoinjs-lib";
 
 import { BitcoinService } from "../../bitcoin/BitcoinService";
 import { btcToSat } from "./Bitcoin";
 
-const bitcoinService = new BitcoinService(new ConfigService());
+const bitcoinService = new BitcoinService(new ConfigService(), new HttpService());
 
 /**
  * Attempt to retrieve a PSBT from the psbt string. We try both hex and base64

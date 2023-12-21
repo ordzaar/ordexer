@@ -1,3 +1,4 @@
+import { HttpService } from "@nestjs/axios";
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import * as retry from "async-retry";
@@ -10,7 +11,10 @@ import { extractAddress } from "./utils/Address";
 export class BitcoinService {
   private readonly logger;
 
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly httpService: HttpService,
+  ) {
     this.logger = new Logger(BitcoinService.name);
   }
 
@@ -20,25 +24,22 @@ export class BitcoinService {
     ).toString("base64");
     const authorization = `Basic ${userPassBase64}`;
 
-    const requestOptions = {
-      method: "POST",
-      headers: {
-        "Content-Type": "text/plain",
-        Authorization: authorization,
-      },
-      body: JSON.stringify({
-        jsonrpc: "1.0",
-        method,
-        params,
-      }),
-    };
-
-    const response: Response = await retry(
+    const response = await retry(
       async () => {
         try {
-          const res: Response = await fetch(
-            `${this.configService.get<string>("bitcoinRpc.uri")}:${this.configService.get<string>("bitcoinRpc.port")}`!,
-            requestOptions,
+          const res = await this.httpService.axiosRef.post(
+            `${this.configService.get<string>("bitcoinRpc.uri")}:${this.configService.get<string>("bitcoinRpc.port")}`,
+            {
+              jsonrpc: "1.0",
+              method,
+              params,
+            },
+            {
+              headers: {
+                "Content-Type": "text/plain",
+                Authorization: authorization,
+              },
+            },
           );
 
           if (res.status === 503) {
@@ -61,9 +62,7 @@ export class BitcoinService {
       throw new Error(`RPC request failed with status ${response.status}`);
     }
 
-    const json: any = await response.json();
-
-    return json.result;
+    return response.data.result;
   }
 
   async getBitcoinNetwork() {
