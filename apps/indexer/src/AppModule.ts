@@ -12,8 +12,6 @@ import { CustomCacheModule } from "./modules/CustomCacheModule";
 import { CustomThrottlerModule } from "./modules/CustomThrottlerModule";
 import { HealthModule } from "./modules/HealthModule";
 import { OrdModule } from "./ord/OrdModule";
-import { OrdTestController } from "./OrdTestController";
-import { RpcTestController } from "./RpcTestController";
 import { VersionModule } from "./version/VersionModule";
 
 @Module({
@@ -32,7 +30,7 @@ import { VersionModule } from "./version/VersionModule";
     ScheduleModule.forRoot(),
     IndexerModule,
   ],
-  controllers: [OrdTestController, RpcTestController],
+  controllers: [],
   providers: [
     {
       provide: APP_GUARD,
