@@ -39,15 +39,20 @@ export class BitcoinService {
                 "Content-Type": "text/plain",
                 Authorization: authorization,
               },
+              // This is needed to prevent axios from throwing an error on non-200 responses
+              // We handle non-200 responses in the outer block
+              validateStatus: () => true,
             },
           );
 
+          // Only 503 responses are handled here
           if (res.status === 503) {
             throw new Error(`RPC request failed with status ${res.status}`);
           }
 
           return res;
         } catch (error) {
+          // This catches the 503, then retries
           this.logger.error(`RPC request failed with error: ${error}`);
           await sleep(5);
           throw error;
