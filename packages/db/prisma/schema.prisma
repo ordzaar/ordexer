@@ -11,12 +11,14 @@ datasource db {
 model Indexer {
   id    String @id @default(uuid())
   block Int
+  name  String @unique
 }
 
 model Output {
   id                String                @id @default(uuid())
   addresses         String[]
   value             Int
+  scriptPubKey      Json
 
   // Each output is the output of exactly one transaction
   voutBlockHash     String
@@ -33,49 +35,43 @@ model Output {
   
   spent             Boolean               @default(true)
 
+  inscriptions      Inscription[]
+
   @@index([voutBlockHeight])
   @@unique([voutTxid, voutTxIndex])
   @@unique([vinTxid, vinTxIndex])
 }
 
-
-model Utxo {
-  id                String                @id @default(uuid())
-  txid              String
-  index             Int
-  sats              Int
-  address           String
-  location          String                @unique
-  satRanges         Int[]                 @default([])
-
-  // A UTXO can have multiple inscriptions
-  inscriptions  Inscription[]
-
-  @@unique([txid, index])
-}
-
 model Inscription {
   id                String                @id @default(uuid())
-  utxo              Utxo                  @relation(fields: [utxoId], references: [id])
-  utxoId            String
+  inscriptionId     String                @unique
+  output            Output?               @relation(fields: [outputId], references: [id])
+  outputId          String?
   creator           String
   owner             String?
-  sat               Int
+  sat               BigInt
   mimeType          String
   mimeSubtype       String
   mediaType         String
   mediaCharset      String
+  // Media Size in bytes. Int4 is sufficient, should not exceed 2GB.
   mediaSize         Int
   // Media Content is split into a separate table keep Inscription table small
-  mediaContent      MediaContent?
+  mediaContent      MediaContent          @relation(fields: [mediaContentId], references: [id])
+  mediaContentId    String                @unique
+  // To the engineer changing timestamp to BigInt, best of luck! Long live Ordzaar!
   timestamp         Int
   height            Int
   fee               Int
   genesis           String
-  number            Int
+  // In case the number of Ordinals exceed 2B
+  number            BigInt
+  sequence          BigInt
   outpoint          String
-  ethereum          String
+  ethereum          String?
   verified          Boolean?
+  meta              Json?
+  ometa             Json?
 
   @@index(height)
   @@index(number)
@@ -89,8 +85,7 @@ model Inscription {
 
 model MediaContent {
   id                String              @id @default(uuid())
-  inscription       Inscription         @relation(fields: [inscriptionId], references: [id])
-  inscriptionId     String              @unique
+  inscription       Inscription?
 
   // Bytestring of the media content
   content           Bytes
