@@ -4,8 +4,8 @@ import { ConfigService } from "@nestjs/config";
 import * as retry from "async-retry";
 import { networks } from "bitcoinjs-lib";
 
-import { sleep } from "../utils/Sleep";
 import { extractAddress } from "./utils/Address";
+import { sleep } from "./utils/Sleep";
 
 @Injectable()
 export class BitcoinService {

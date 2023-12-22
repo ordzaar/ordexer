@@ -1,5 +1,5 @@
 {
-  "name": "@ordzaar/rpcservices",
+  "name": "@ordzaar/ord-service",
   "version": "0.0.0",
   "description": "",
   "main": "./dist/index.js",
@@ -23,6 +23,7 @@
   "prettier": "@ordzaar/standard-prettier",
   "dependencies": {
     "@ordzaar/standard-api-fastify": "^0.4.11",
+    "axios": "^1.6.2",
     "bitcoinjs-lib": "^6.1.5"
   },
   "devDependencies": {
