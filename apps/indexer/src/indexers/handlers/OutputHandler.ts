@@ -1,6 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { ScriptPubKey } from "@ordzaar/rpcservices";
+import { ScriptPubKey } from "@ordzaar/bitcoin-service";
 import { Prisma, PrismaClient, PrismaPromise } from "@prisma/client";
 import { ITXClientDenyList, Omit } from "@prisma/client/runtime/library";
 import { perf } from "src/utils/Log";

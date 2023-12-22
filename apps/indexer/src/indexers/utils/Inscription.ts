@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-types */
-/* eslint-disable consistent-return */
-import { OrdInscription, parseLocation, RawTransaction } from "@ordzaar/rpcservices";
+import { parseLocation, RawTransaction } from "@ordzaar/bitcoin-service";
+import { OrdInscription } from "@ordzaar/ord-service";
 import { PrismaClient } from "@prisma/client";
 import { ITXClientDenyList, Omit } from "@prisma/client/runtime/library";
 import { networks } from "bitcoinjs-lib";

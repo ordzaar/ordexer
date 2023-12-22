@@ -1,6 +1,6 @@
 import { HttpService } from "@nestjs/axios";
 import { ConfigService } from "@nestjs/config";
-import { BitcoinService } from "@ordzaar/rpcservices";
+import { BitcoinService } from "@ordzaar/bitcoin-service";
 import { address, networks, Psbt, Transaction } from "bitcoinjs-lib";
 
 import { btcToSat } from "./Bitcoin";

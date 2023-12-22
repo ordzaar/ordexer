@@ -1,5 +1,5 @@
 import { Controller, Get, Param } from "@nestjs/common";
-import { BitcoinService } from "@ordzaar/rpcservices";
+import { BitcoinService } from "@ordzaar/bitcoin-service";
 
 @Controller("rpctest")
 export class RpcTestController {

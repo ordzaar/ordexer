@@ -1,5 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { OrdInscription, OrdProvider, parseLocation } from "@ordzaar/rpcservices";
+import { parseLocation } from "@ordzaar/bitcoin-service";
+import { OrdInscription, OrdProvider } from "@ordzaar/ord-service";
 import { PrismaClient } from "@prisma/client";
 import { ITXClientDenyList, Omit } from "@prisma/client/runtime/library";
 

@@ -1,4 +1,4 @@
-import { isCoinbase, RawTransaction } from "@ordzaar/rpcservices";
+import { isCoinbase, RawTransaction } from "@ordzaar/bitcoin-service";
 import { script } from "bitcoinjs-lib";
 
 import { getMetaFromWitness } from "./Oip";
