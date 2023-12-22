@@ -135,7 +135,7 @@ export class InscriptionHandler extends BaseIndexerHandler {
 
     // eslint-disable-next-line no-restricted-syntax
     for (const inscription of rawInscriptions) {
-      const output = await prismaTx.output.findUniqueOrThrow({
+      const output = await prismaTx.output.findUnique({
         where: {
           voutTxid_voutTxIndex: {
             voutTxid: inscription.outpoint.split(":")[0],
@@ -252,6 +252,7 @@ export class InscriptionHandler extends BaseIndexerHandler {
           data: {
             owner: output?.addresses[0] ?? "",
             outpoint: `${txid}:${n}`,
+            outputId: output?.id ?? "",
           },
         });
       }
@@ -288,5 +289,5 @@ export type Inscription = {
   ometa?: any;
   meta?: any;
   verified?: boolean;
-  outputId: string;
+  outputId?: string;
 };

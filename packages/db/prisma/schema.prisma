@@ -45,8 +45,8 @@ model Output {
 model Inscription {
   id                String                @id @default(uuid())
   inscriptionId     String                @unique
-  output            Output                @relation(fields: [outputId], references: [id])
-  outputId          String
+  output            Output?               @relation(fields: [outputId], references: [id])
+  outputId          String?
   creator           String
   owner             String?
   sat               BigInt
