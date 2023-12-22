@@ -168,7 +168,7 @@ export class InscriptionHandler extends BaseIndexerHandler {
         sequence: inscription.sequence,
         outpoint: inscription.outpoint,
         ometa: inscription.meta,
-        outputId: output.id,
+        outputId: output?.id,
       };
       if (inscription.oip) {
         entry.meta = inscription.oip;
