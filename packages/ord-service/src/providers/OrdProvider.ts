@@ -4,6 +4,8 @@ import { ConfigService } from "@nestjs/config";
 import { AxiosResponse } from "axios";
 import { networks } from "bitcoinjs-lib";
 
+import { OrdError } from "../errors/OrdError";
+
 @Injectable()
 export class OrdProvider {
   private readonly logger;
@@ -49,7 +51,7 @@ export class OrdProvider {
     }
 
     if (response.status !== 200) {
-      throw new Error(`ORD request failed with status ${response.status}`);
+      throw new OrdError(`ORD request failed with status ${response.status}`);
     }
 
     return response.data as R;
@@ -65,7 +67,7 @@ export class OrdProvider {
       case "regtest":
         return networks.regtest;
       default:
-        throw new Error(`Invalid network config: ${network}`);
+        throw new OrdError(`Invalid network config: ${network}`);
     }
   }
 
