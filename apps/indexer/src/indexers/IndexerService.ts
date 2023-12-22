@@ -72,6 +72,11 @@ export class IndexerService {
     let currentBlockHeight = indexerBlockHeight;
 
     while (currentBlockHeight > targetHeight) {
+      if (currentBlockHeight < 0) {
+        // This means all of the blocks are unhealthy
+        return -1;
+      }
+
       const block = await this.bitcoinService.getBlock(currentBlockHeight);
       if (!block) {
         currentBlockHeight -= 1;
