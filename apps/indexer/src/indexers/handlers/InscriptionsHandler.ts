@@ -1,8 +1,9 @@
 import { Injectable, Logger } from "@nestjs/common";
+import { parseLocation } from "@ordzaar/bitcoin-service";
+import { OrdInscription, OrdProvider } from "@ordzaar/ord-service";
 import { PrismaClient } from "@prisma/client";
 import { ITXClientDenyList, Omit } from "@prisma/client/runtime/library";
 
-import { OrdInscription, OrdProvider } from "../../ord/providers/OrdProvider";
 import { perf } from "../../utils/Log";
 import { VinData, VoutData } from "../types";
 import { Envelope } from "../utils/Envelope";
@@ -12,7 +13,6 @@ import {
   Inscription as RawInscription,
 } from "../utils/Inscription";
 import { isOIP2Meta, validateOIP2Meta } from "../utils/Oip";
-import { parseLocation } from "../utils/Transaction";
 import { BaseIndexerHandler } from "./BaseHandler";
 
 @Injectable()

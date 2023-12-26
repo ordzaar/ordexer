@@ -3,15 +3,15 @@ import { ConfigModule } from "@nestjs/config";
 import { APP_GUARD, APP_INTERCEPTOR } from "@nestjs/core";
 import { ScheduleModule } from "@nestjs/schedule";
 import { ThrottlerGuard } from "@nestjs/throttler";
+import { BitcoinModule } from "@ordzaar/bitcoin-service";
+import { OrdModule } from "@ordzaar/ord-service";
 
 import { appConfig, ENV_VALIDATION_SCHEMA } from "./AppConfig";
-import { BitcoinModule } from "./bitcoin/BitcoinModule";
 import { IndexerModule } from "./indexers/IndexerModule";
 import { CustomCacheInterceptor } from "./interceptors/CustomCacheInterceptor";
 import { CustomCacheModule } from "./modules/CustomCacheModule";
 import { CustomThrottlerModule } from "./modules/CustomThrottlerModule";
 import { HealthModule } from "./modules/HealthModule";
-import { OrdModule } from "./ord/OrdModule";
 import { VersionModule } from "./version/VersionModule";
 
 @Module({

@@ -1,7 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { Cron, CronExpression } from "@nestjs/schedule";
-import { BitcoinService } from "src/bitcoin/BitcoinService";
+import { BitcoinService } from "@ordzaar/bitcoin-service";
 import { PrismaService } from "src/PrismaService";
 
 import { IndexerService } from "./IndexerService";

@@ -4,8 +4,9 @@ import { ConfigService } from "@nestjs/config";
 import * as retry from "async-retry";
 import { networks } from "bitcoinjs-lib";
 
-import { sleep } from "../utils/Sleep";
+import { BitcoinRpcError } from "./errors/RpcError";
 import { extractAddress } from "./utils/Address";
+import { sleep } from "./utils/Sleep";
 
 @Injectable()
 export class BitcoinService {
@@ -47,7 +48,7 @@ export class BitcoinService {
 
           // Only 503 responses are handled here
           if (res.status === 503) {
-            throw new Error(`RPC request failed with status ${res.status}`);
+            throw new BitcoinRpcError(`RPC request failed with status ${res.status}`);
           }
 
           return res;
@@ -64,7 +65,7 @@ export class BitcoinService {
     );
 
     if (response.status !== 200) {
-      throw new Error(`RPC request failed with status ${response.status}`);
+      throw new BitcoinRpcError(`RPC request failed with status ${response.status}`);
     }
 
     return response.data.result;
@@ -80,7 +81,7 @@ export class BitcoinService {
       case "regtest":
         return networks.regtest;
       default:
-        throw new Error(`Invalid network config: ${network}`);
+        throw new BitcoinRpcError(`Invalid network config: ${network}`);
     }
   }
 

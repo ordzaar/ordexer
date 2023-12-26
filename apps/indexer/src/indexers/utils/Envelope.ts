@@ -1,7 +1,6 @@
+import { isCoinbase, RawTransaction } from "@ordzaar/bitcoin-service";
 import { script } from "bitcoinjs-lib";
 
-import { RawTransaction } from "../../bitcoin/BitcoinService";
-import { isCoinbase } from "../../bitcoin/utils/Transaction";
 import { getMetaFromWitness } from "./Oip";
 
 const PROTOCOL_ID = "6f7264";

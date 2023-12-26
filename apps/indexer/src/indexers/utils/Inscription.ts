@@ -1,13 +1,12 @@
 /* eslint-disable @typescript-eslint/ban-types */
+import { parseLocation, RawTransaction } from "@ordzaar/bitcoin-service";
+import { OrdInscription } from "@ordzaar/ord-service";
 import { PrismaClient } from "@prisma/client";
 import { ITXClientDenyList, Omit } from "@prisma/client/runtime/library";
 import { networks } from "bitcoinjs-lib";
 
-import { RawTransaction } from "../../bitcoin/BitcoinService";
-import { OrdInscription } from "../../ord/providers/OrdProvider";
 import { VinData } from "../types";
 import { Envelope } from "./Envelope";
-import { parseLocation } from "./Transaction";
 
 export async function getInscriptionEpochBlock(network: networks.Network): Promise<number> {
   switch (network) {
