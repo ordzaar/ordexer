@@ -19,6 +19,18 @@ export class BitcoinService {
     this.logger = new Logger(BitcoinService.name);
   }
 
+  /**
+   * Calls the Bitcoin RPC with the given method and params
+   * Refer to https://developer.bitcoin.org/reference/rpc/index.html for RPC methods
+   * @param method The RPC method to call
+   * @param params The params to pass to the RPC method
+   * @returns The RPC response
+   * @throws {BitcoinRpcError} If the RPC request fails
+   *
+   * If RPC returns an error, the error code and message are included in the thrown error
+   * Refer to https://github.com/bitcoin/bitcoin/blob/master/src/rpc/protocol.h for error codes
+   *
+   */
   async rpc<R>(method: string, params: any[] = []): Promise<R> {
     const userPassBase64 = Buffer.from(
       `${this.configService.get<string>("bitcoinRpc.user")}:${this.configService.get<string>("bitcoinRpc.password")}`,
@@ -46,15 +58,14 @@ export class BitcoinService {
             },
           );
 
-          // Only 503 responses are handled here
+          // Only 503 responses throw an error and retry, the rest return the response and throw an error on the outer block
           if (res.status === 503) {
             throw new BitcoinRpcError(`RPC request failed with status ${res.status}`);
           }
-
           return res;
         } catch (error) {
           // This catches the 503, then retries
-          this.logger.error(`RPC request failed with error: ${error}`);
+          this.logger.error(error);
           await sleep(5);
           throw error;
         }
@@ -64,11 +75,15 @@ export class BitcoinService {
       },
     );
 
+    const rpcResponse: RpcResponse = response.data;
+
     if (response.status !== 200) {
-      throw new BitcoinRpcError(`RPC request failed with status ${response.status}`);
+      throw new BitcoinRpcError(
+        `RPC request failed. Status: ${response.status}, Error code: ${rpcResponse.error?.code}, Message: ${rpcResponse.error?.message}`,
+      );
     }
 
-    return response.data.result;
+    return rpcResponse.result;
   }
 
   async getBitcoinNetwork() {
@@ -136,6 +151,15 @@ export class BitcoinService {
     return [];
   }
 }
+
+export type RpcResponse = {
+  result: any | null;
+  error: {
+    code: number;
+    message: string;
+  } | null;
+  id: string | null;
+};
 
 export type RawTransaction = {
   hex: string;
