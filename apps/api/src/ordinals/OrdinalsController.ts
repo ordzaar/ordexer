@@ -1,5 +1,6 @@
 import { Controller, Get, Param } from "@nestjs/common";
-import { BitcoinService, OrdProvider } from "@ordzaar/rpcservices";
+import { BitcoinService } from "@ordzaar/bitcoin-service";
+import { OrdProvider } from "@ordzaar/ord-service";
 
 import { OrdinalsService } from "./OrdinalsService";
 

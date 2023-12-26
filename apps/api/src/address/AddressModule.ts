@@ -1,5 +1,6 @@
 import { Module } from "@nestjs/common";
-import { BitcoinModule, OrdModule } from "@ordzaar/rpcservices";
+import { BitcoinModule } from "@ordzaar/bitcoin-service";
+import { OrdModule } from "@ordzaar/ord-service";
 
 import { PrismaModule } from "../PrismaModule";
 import { AddressController } from "./AddressController";

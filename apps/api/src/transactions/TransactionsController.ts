@@ -1,5 +1,5 @@
 import { Controller, Get, Param, Post } from "@nestjs/common";
-import { BitcoinService } from "@ordzaar/rpcservices";
+import { BitcoinService } from "@ordzaar/bitcoin-service";
 
 import { TransactionsService } from "./TransactionsService";
 

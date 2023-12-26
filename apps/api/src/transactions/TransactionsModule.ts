@@ -1,5 +1,5 @@
 import { Module } from "@nestjs/common";
-import { BitcoinModule } from "@ordzaar/rpcservices";
+import { BitcoinModule } from "@ordzaar/bitcoin-service";
 
 import { PrismaModule } from "../PrismaModule";
 import { TransactionsController } from "./TransactionsController";
