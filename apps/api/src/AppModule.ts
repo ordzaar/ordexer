@@ -2,7 +2,9 @@ import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { APP_GUARD, APP_INTERCEPTOR } from "@nestjs/core";
 import { ThrottlerGuard } from "@nestjs/throttler";
+import { JsonRpcModule } from "@ordzaar/http-json-rpc";
 
+import { AddressModule } from "./address/AddressModule";
 import { appConfig, ENV_VALIDATION_SCHEMA } from "./AppConfig";
 import { CustomCacheInterceptor } from "./interceptors/CustomCacheInterceptor";
 import { CustomCacheModule } from "./modules/CustomCacheModule";
@@ -20,6 +22,10 @@ import { VersionModule } from "./version/VersionModule";
     }),
     CustomThrottlerModule,
     HealthModule,
+    AddressModule,
+    JsonRpcModule.forRoot({
+      path: "/rpc",
+    }),
     VersionModule,
   ],
   controllers: [],
