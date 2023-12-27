@@ -1,6 +1,7 @@
-import { Controller, Get, Param } from "@nestjs/common";
+import { Body, Controller, Get, Param } from "@nestjs/common";
 
-import { AddressService } from "./AddressService";
+import { GetSpendablesDto } from "../models/Address";
+import { AddressService } from "../services/AddressService";
 
 @Controller("address")
 export class AddressController {
@@ -13,8 +14,8 @@ export class AddressController {
   }
 
   @Get("getSpendables/:address")
-  async getSpendables(@Param("address") address: string) {
-    const spendables = await this.addressService.getSpendables(address);
+  async getSpendables(@Body() getSpendablesDto: GetSpendablesDto) {
+    const spendables = await this.addressService.getSpendables(getSpendablesDto.address);
     return { spendables };
   }
 

@@ -2,7 +2,7 @@ import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { BitcoinService } from "@ordzaar/bitcoin-service";
 
-import { PrismaService } from "../PrismaService";
+import { PrismaService } from "../../PrismaService";
 
 @Injectable()
 export class AddressService {
