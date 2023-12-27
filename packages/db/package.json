@@ -36,7 +36,7 @@
     "@ordzaar/standard-typescript": "^0.4.11",
     "@ordzaar/standard-prettier": "^0.4.11",
     "@ordzaar/standard-linter": "^0.4.11",
-    "@stickyjs/testcontainers": "^1.3.4",
+    "@stickyjs/testcontainers": "^1.3.7",
     "prisma": "^5.7.1",
     "prisma-erd-generator": "^1.11.2",
     "testcontainers": "^10.4.0"
