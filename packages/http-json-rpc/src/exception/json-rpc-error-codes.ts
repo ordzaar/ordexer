@@ -1,4 +1,4 @@
-export enum JSON_RPC_ERROR_CODES {
+export enum JsonRpcErrorCodes {
   // Invalid JSON was received by the server.
   // An error occurred on the server while parsing the JSON text.
   PARSE_ERROR = -32700,

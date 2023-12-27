@@ -1,6 +1,6 @@
 import { RpcErrorInterface, RpcRequestInterface, RpcResultInterface } from "./interfaces";
 
-export type Fn = (...args) => any;
+export type Fn = (...args: any[]) => any;
 
 export type RpcRequest = RpcRequestInterface | RpcRequestInterface[];
 export type RpcResult = RpcResultInterface | RpcResultInterface[];

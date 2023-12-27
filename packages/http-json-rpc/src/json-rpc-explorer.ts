@@ -1,5 +1,4 @@
 import { Injectable } from "@nestjs/common";
-import { isUndefined } from "@nestjs/common/utils/shared.utils";
 import { DiscoveryService, MetadataScanner } from "@nestjs/core";
 import { InstanceWrapper } from "@nestjs/core/injector/instance-wrapper";
 import { Module } from "@nestjs/core/injector/module";
@@ -11,61 +10,51 @@ import { RpcMethodHandler } from "./interfaces";
 export class JsonRpcExplorer {
   private metadataScanner = new MetadataScanner();
 
-  private defaultSingleMethod = "invoke";
-
   constructor(private nestDiscovery: DiscoveryService) {}
 
   public explore(module: Module): RpcMethodHandler[] {
-    return this.nestDiscovery.getProviders({}, [module]).reduce((acc, instanceWrapper) => {
+    const providers = this.nestDiscovery.getProviders({}, [module]);
+
+    const result = providers.reduce((acc, instanceWrapper) => {
       const methods = this.filterHandlers(instanceWrapper);
       return [...acc, ...(methods || [])];
-    }, []);
+    }, [] as RpcMethodHandler[]);
+
+    return result;
   }
 
   private filterHandlers(instanceWrapper: InstanceWrapper): RpcMethodHandler[] {
     const { instance } = instanceWrapper;
     if (!instance) {
-      return;
+      return [];
     }
 
     const metadata = Reflect.getMetadata(RpcMetadataKey, instance.constructor);
-
     if (metadata === undefined) {
-      return;
+      return [];
     }
+
     const instancePrototype = Object.getPrototypeOf(instanceWrapper.instance);
 
-    if (instance[this.defaultSingleMethod]) {
-      return [
-        {
-          callback: instance.invoke,
-          methodName: this.defaultSingleMethod,
-          instanceWrapper,
-          rpcMethodName: metadata.method,
-        },
-      ];
-    }
+    return this.metadataScanner.getAllMethodNames(instancePrototype).map((methodName) => {
+      const exploreMethodHandlers = this.exploreMethodHandlers(methodName, instancePrototype);
+      const { rpcMethodMetadata, callback } = exploreMethodHandlers!;
 
-    return this.metadataScanner.scanFromPrototype(instance, instancePrototype, (method) => {
-      const { rpcMethodMetadata, callback } = this.exploreMethodHandlers(method, instancePrototype);
       const rpcMethodName =
         metadata.method.length === 0 ? rpcMethodMetadata.name : `${metadata.method}.${rpcMethodMetadata.name}`;
 
       return {
         callback,
-        methodName: method,
+        methodName,
         instanceWrapper,
         rpcMethodName,
       };
     });
   }
 
-  private exploreMethodHandlers(method, instancePrototype: any) {
+  private exploreMethodHandlers(method: string, instancePrototype: any) {
     const callback = instancePrototype[method];
     const rpcMethodMetadata = Reflect.getMetadata(RpcMethodMetadataKey, callback);
-    if (isUndefined(rpcMethodMetadata)) {
-      return null;
-    }
 
     return {
       callback,

@@ -1,30 +1,23 @@
 import { Type } from "@nestjs/common";
-import { ApplicationConfig, ContextIdFactory, NestContainer } from "@nestjs/core";
+import { ApplicationConfig, NestContainer } from "@nestjs/core";
 import { GuardsConsumer } from "@nestjs/core/guards/guards-consumer";
 import { GuardsContextCreator } from "@nestjs/core/guards/guards-context-creator";
-import { ExecutionContextHost } from "@nestjs/core/helpers/execution-context-host";
 import { STATIC_CONTEXT } from "@nestjs/core/injector/constants";
-import { Injector } from "@nestjs/core/injector/injector";
-import { ContextId, InstanceWrapper } from "@nestjs/core/injector/instance-wrapper";
-import { Module } from "@nestjs/core/injector/module";
 import { InterceptorsConsumer } from "@nestjs/core/interceptors/interceptors-consumer";
 import { InterceptorsContextCreator } from "@nestjs/core/interceptors/interceptors-context-creator";
 import { PipesConsumer } from "@nestjs/core/pipes/pipes-consumer";
 import { PipesContextCreator } from "@nestjs/core/pipes/pipes-context-creator";
-import { REQUEST_CONTEXT_ID } from "@nestjs/core/router/request/request-constants";
 import { RouteParamsFactory } from "@nestjs/core/router/route-params-factory";
 import { RouterExceptionFilters } from "@nestjs/core/router/router-exception-filters";
 import { RouterProxyCallback } from "@nestjs/core/router/router-proxy";
 
 import { JsonRpcContextCreator } from "./context/json-rpc-context-creator";
 import { JsonRpcProxy } from "./context/json-rpc-proxy";
-import { IRpcHandler, RpcMethodHandler } from "./interfaces";
+import { RpcMethodHandler } from "./interfaces";
 import { ProxyCallback } from "./types";
 
 export class RpcCallbackProxy {
   private readonly routerProxy = new JsonRpcProxy();
-
-  private readonly exceptionFiltersCache = new WeakMap();
 
   private readonly executionContextCreator: JsonRpcContextCreator;
 
@@ -33,16 +26,16 @@ export class RpcCallbackProxy {
   constructor(
     private readonly config: ApplicationConfig,
     private readonly container: NestContainer,
-    private readonly injector: Injector,
   ) {
     const httpAdapterRef = container.getHttpAdapterRef();
+
     this.executionContextCreator = new JsonRpcContextCreator(
       new RouteParamsFactory(),
-      new PipesContextCreator(container, this.config),
+      new PipesContextCreator(this.container, this.config),
       new PipesConsumer(),
-      new GuardsContextCreator(container, this.config),
+      new GuardsContextCreator(this.container, this.config),
       new GuardsConsumer(),
-      new InterceptorsContextCreator(container, this.config),
+      new InterceptorsContextCreator(this.container, this.config),
       new InterceptorsConsumer(),
       httpAdapterRef,
     );
@@ -52,20 +45,12 @@ export class RpcCallbackProxy {
   public create(rpcMethodHandler: RpcMethodHandler, moduleKey: string) {
     const { instanceWrapper, methodName, callback } = rpcMethodHandler;
     const { instance } = instanceWrapper;
-    const isRequestScoped = !instanceWrapper.isDependencyTreeStatic();
 
-    return isRequestScoped
-      ? this.createRequestScopedHandler(
-          instanceWrapper,
-          this.container.getModuleByKey(moduleKey),
-          moduleKey,
-          methodName,
-        )
-      : this.createCallbackProxy(instance, callback, methodName, moduleKey);
+    return this.createCallbackProxy(instance, callback, methodName, moduleKey);
   }
 
   private createCallbackProxy(
-    instance: IRpcHandler<any> | Type<any>,
+    instance: Type<any>,
     callback: RouterProxyCallback,
     methodName: string,
     moduleRef: string,
@@ -74,65 +59,14 @@ export class RpcCallbackProxy {
   ): ProxyCallback {
     const executionContext = this.executionContextCreator.create(
       instance,
-      callback,
+      callback as (...args: unknown[]) => unknown,
       methodName,
       moduleRef,
       contextId,
       inquirerId,
     );
     const exceptionFilter = this.exceptionsFilter.create(instance, callback, moduleRef, contextId, inquirerId);
-    return this.routerProxy.createProxy(executionContext, exceptionFilter);
-  }
-
-  public createRequestScopedHandler(
-    instanceWrapper: InstanceWrapper,
-    moduleRef: Module,
-    moduleKey: string,
-    methodName: string,
-  ) {
-    const { instance } = instanceWrapper;
-    const collection = moduleRef.providers;
-    return async <TRequest extends Record<any, any>, TResponse>(req: TRequest, res: TResponse, next: () => void) => {
-      try {
-        const contextId = this.getContextId(req);
-        const contextInstance = await this.injector.loadPerContext(
-          instance,
-          moduleRef,
-          collection,
-          contextId,
-          instanceWrapper,
-        );
-        return this.createCallbackProxy(
-          contextInstance,
-          contextInstance[methodName],
-          methodName,
-          moduleKey,
-          contextId,
-          instanceWrapper.id,
-        )(req, res, next);
-      } catch (err) {
-        let exceptionFilter = this.exceptionFiltersCache.get(instance[methodName]);
-        if (!exceptionFilter) {
-          exceptionFilter = this.exceptionsFilter.create(instance, instance[methodName], moduleKey);
-          this.exceptionFiltersCache.set(instance[methodName], exceptionFilter);
-        }
-        const host = new ExecutionContextHost([req, res, next]);
-        exceptionFilter.next(err, host);
-      }
-    };
-  }
-
-  private getContextId<T extends Record<any, unknown> = any>(request: T): ContextId {
-    const contextId = ContextIdFactory.getByRequest(request);
-    if (!request[REQUEST_CONTEXT_ID as any]) {
-      Object.defineProperty(request, REQUEST_CONTEXT_ID, {
-        value: contextId,
-        enumerable: false,
-        writable: false,
-        configurable: false,
-      });
-      this.container.registerRequestProvider(request, contextId);
-    }
-    return contextId;
+    const proxyCallback = this.routerProxy.createProxy(executionContext as RouterProxyCallback, exceptionFilter);
+    return proxyCallback as ProxyCallback;
   }
 }

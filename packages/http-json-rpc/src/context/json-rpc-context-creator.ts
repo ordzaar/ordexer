@@ -1,4 +1,4 @@
-import { ForbiddenException, RouteParamMetadata } from "@nestjs/common";
+import { ForbiddenException } from "@nestjs/common";
 import { CUSTOM_ROUTE_ARGS_METADATA, HEADERS_METADATA, ROUTE_ARGS_METADATA } from "@nestjs/common/constants";
 import { RouteParamtypes } from "@nestjs/common/enums/route-paramtypes.enum";
 import { ContextType, Controller, HttpServer, PipeTransform, Type } from "@nestjs/common/interfaces";
@@ -16,12 +16,15 @@ import { PipesConsumer } from "@nestjs/core/pipes/pipes-consumer";
 import { PipesContextCreator } from "@nestjs/core/pipes/pipes-context-creator";
 import { IRouteParamsFactory } from "@nestjs/core/router/interfaces/route-params-factory.interface";
 import { ParamProperties } from "@nestjs/core/router/router-execution-context";
+import { RouterProxyCallback } from "@nestjs/core/router/router-proxy";
 import { CustomHeader } from "@nestjs/core/router/router-response-controller";
 
-import { IRpcHandler } from "../interfaces";
 import { Fn } from "../types";
 import { JsonRpcResponseController } from "./json-rpc-response-controller";
 
+// This class is a modified version of the nextjs external-context-creator
+// Source: https://github.com/nestjs/nest/blob/master/packages/core/helpers/external-context-creator.ts
+// It is not a strongly typed class, but it works for now. It may need to be updated with the current class version if necessary.
 export class JsonRpcContextCreator {
   private readonly handlerMetadataStorage = new HandlerMetadataStorage();
 
@@ -41,11 +44,11 @@ export class JsonRpcContextCreator {
     private readonly interceptorsConsumer: InterceptorsConsumer,
     private readonly applicationRef: HttpServer,
   ) {
-    this.responseController = new JsonRpcResponseController(applicationRef);
+    this.responseController = new JsonRpcResponseController(this.applicationRef);
   }
 
-  public create<TContext extends string = ContextType>(
-    instance: IRpcHandler<any> | Type<any>,
+  public create(
+    instance: Type<any>,
     callback: (...args: unknown[]) => unknown,
     methodName: string,
     module: string,
@@ -80,7 +83,7 @@ export class JsonRpcContextCreator {
         if (fnApplyPipes) {
           await fnApplyPipes(args, req, res, next);
         }
-        return callback.apply(instance, args);
+        return callback.apply(instance, args as [req?: unknown, res?: unknown, next?: (() => void) | undefined]);
       };
 
     return async <TRequest, TResponse>(req: TRequest, res: TResponse, next: Fn) => {
@@ -102,14 +105,15 @@ export class JsonRpcContextCreator {
         handler(args, req, res, next),
         contextType,
       );
-      // @ts-ignore
-      return await fnHandleResponse(result, res);
+
+      // @ts-expect-error TODO need to validate this
+      return fnHandleResponse(result, res);
     };
   }
 
-  public getMetadata<TMetadata, TContext extends string = ContextType>(
+  public getMetadata<TContext extends string = ContextType>(
     instance: Controller,
-    callback: (...args: unknown[]) => unknown,
+    callback: RouterProxyCallback,
     methodName: string,
     contextType: TContext,
   ): HandlerMetadata {
@@ -143,14 +147,14 @@ export class JsonRpcContextCreator {
 
   public exchangeKeysForValues(
     keys: string[],
-    metadata: RouteParamMetadata,
+    metadata: any,
     moduleContext: string,
     contextId = STATIC_CONTEXT,
     inquirerId?: string,
     contextFactory = this.contextUtils.getContextFactory("http"),
-  ): ParamProperties[] {
+  ) {
     this.pipesContextCreator.setModuleContext(moduleContext);
-    return keys.map((key) => {
+    const results = keys.map((key) => {
       const { index, data, pipes: pipesCollection } = metadata[key];
       const pipes = this.pipesContextCreator.createConcreteContext(pipesCollection, contextId, inquirerId);
       const type = this.contextUtils.mapParamType(key);
@@ -163,12 +167,14 @@ export class JsonRpcContextCreator {
       const numericType = Number(type);
       const extractValue = <TRequest, TResponse>(req: TRequest, res: TResponse, next: Fn) =>
         this.paramsFactory.exchangeKeyForValue(numericType, data, {
-          req,
+          req: req as Record<string, any>,
           res,
           next,
         });
       return { index, extractValue, type: numericType, data, pipes };
     });
+
+    return results;
   }
 
   public getCustomFactory(
@@ -208,10 +214,11 @@ export class JsonRpcContextCreator {
   public createPipesFn(pipes: PipeTransform[], paramsOptions: (ParamProperties & { metatype?: unknown })[]) {
     const pipesFn = async <TRequest, TResponse>(args: unknown[], req: TRequest, res: TResponse, next: Fn) => {
       await Promise.all(
-        paramsOptions.map(async (param: ParamProperties & { metatype?: Type<any> }) => {
+        paramsOptions.map(async (param: any) => {
           const { index, extractValue, type, data, metatype, pipes: paramPipes } = param;
           const value = extractValue(req, res, next);
 
+          // eslint-disable-next-line no-param-reassign
           args[index] = await this.getParamValue(value, { metatype, type, data }, pipes.concat(paramPipes));
         }),
       );
@@ -220,11 +227,7 @@ export class JsonRpcContextCreator {
   }
 
   public createHandleResponseFn() {
-    return async <TResult, TResponse>(result: TResult, res: TResponse) => {
-      result = await this.transformToResult(result);
-
-      return result;
-    };
+    return async <TResult, TResponse>(result: TResult, _: TResponse) => this.transformToResult(result);
   }
 
   public async transformToResult(resultOrDeffered: any) {
@@ -234,7 +237,7 @@ export class JsonRpcContextCreator {
     return resultOrDeffered;
   }
 
-  public reflectResponseHeaders(callback: (...args: unknown[]) => unknown): CustomHeader[] {
+  public reflectResponseHeaders(callback: RouterProxyCallback): CustomHeader[] {
     return Reflect.getMetadata(HEADERS_METADATA, callback) || [];
   }
 }

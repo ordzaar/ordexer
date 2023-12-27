@@ -9,7 +9,7 @@ import { RpcException } from "./exception/json-rpc.exception";
 import { RpcInvalidRequestException } from "./exception/rpc-invalid-request.exception";
 import { RpcMethodNotFoundException } from "./exception/rpc-method-not-found.exception";
 import { JsonRpcConfig, RpcErrorInterface, RpcRequestInterface, RpcResultInterface } from "./interfaces";
-import { ProxyCallback, ResponseBatch, RpcRequest, RpcResponse } from "./types";
+import { ProxyCallback, ResponseBatch, RpcRequest } from "./types";
 
 type TRequest = any;
 type TResponse = any;
@@ -20,14 +20,14 @@ export class JsonRpcServer {
 
   private ignoreKeys = ["params", "id"];
 
-  private handlers: Map<string, ProxyCallback>;
+  private handlers: Map<string, ProxyCallback> = new Map();
 
   constructor(private httpAdapterHost: HttpAdapterHost) {}
 
   public run(handlers: Map<string, ProxyCallback>, config: JsonRpcConfig) {
     this.handlers = handlers;
 
-    this.httpAdapterHost.httpAdapter.post(config.path, this.onRequest.bind(this));
+    this.httpAdapterHost.httpAdapter.post(config.path, this.onRequest.bind(this) as any);
   }
 
   private onRequest(request: TRequest, response: TResponse, next: () => void) {
@@ -58,12 +58,12 @@ export class JsonRpcServer {
     });
   }
 
-  private sendResponse(response: any, result?: RpcResponse) {
+  private sendResponse(response: any, result?: any) {
     this.httpAdapterHost.httpAdapter.setHeader(response, "Content-Type", "application/json");
     this.httpAdapterHost.httpAdapter.reply(response, JSON.stringify(result), HttpStatus.OK);
   }
 
-  private lifecycle(request: TRequest, response: TResponse, next: () => void): Observable<RpcResponse> {
+  private lifecycle(request: TRequest, response: TResponse, next: () => void) {
     return of<RpcRequestInterface>(request.body as RpcRequestInterface).pipe(
       tap((body) => this.assertRPCStructure(body)),
       tap((body) => {
@@ -94,11 +94,15 @@ export class JsonRpcServer {
 
   private resolveWaitingResponse(body: RpcRequestInterface, request: TRequest, response: TResponse, next: () => void) {
     const { method, id } = body;
-    if (id === undefined) {
-      this.handlers.get(method)(request, response, next);
+    const methodHandler = this.handlers.get(method);
+    if (methodHandler === undefined) {
       return of(null);
     }
-    const result = this.handlers.get(method)(request, response, next);
+    if (id === undefined) {
+      methodHandler(request, response, next);
+      return of(null);
+    }
+    const result = methodHandler(request, response, next);
     if (result instanceof Promise) {
       return fromPromise(result);
     }
@@ -111,7 +115,7 @@ export class JsonRpcServer {
   }
 
   private isObservable(input: unknown): input is Observable<any> {
-    return input && isFunction((input as Observable<any>).subscribe);
+    return (input as boolean) && isFunction((input as Observable<any>).subscribe);
   }
 
   private wrapRPCResponse({ jsonrpc, id, method }: RpcRequestInterface, result = null): RpcResultInterface {
@@ -137,6 +141,7 @@ export class JsonRpcServer {
 
   private assertRPCStructure(body: RpcRequest): RpcRequest {
     if (Array.isArray(body)) {
+      // eslint-disable-next-line no-restricted-syntax
       for (const operation of body) {
         this.assertStructure(operation);
       }
@@ -161,7 +166,7 @@ export class JsonRpcServer {
     throw new RpcInvalidRequestException();
   }
 
-  private isValidIdType(id): boolean {
+  private isValidIdType(id: any): boolean {
     const type = typeof id;
     if (type === "undefined") {
       return true;

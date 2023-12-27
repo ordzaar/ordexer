@@ -2,7 +2,6 @@ import { MODULE_PATH } from "@nestjs/common/constants";
 import { HttpServer, Type } from "@nestjs/common/interfaces";
 import { Logger } from "@nestjs/common/services/logger.service";
 import { ApplicationConfig, NestContainer } from "@nestjs/core";
-import { Injector } from "@nestjs/core/injector/injector";
 import { Resolver } from "@nestjs/core/router/interfaces/resolver.interface";
 import { RouterProxyCallback } from "@nestjs/core/router/router-proxy";
 
@@ -27,14 +26,13 @@ export class RpcRoutesResolver implements Resolver {
   constructor(
     private readonly container: NestContainer,
     private readonly config: ApplicationConfig,
-    private readonly injector: Injector,
     private readonly rpcConfig: JsonRpcConfig,
     private readonly jsonRpcExplorer: JsonRpcExplorer,
   ) {
-    this.rpcCallbackProxy = new RpcCallbackProxy(this.config, this.container, this.injector);
+    this.rpcCallbackProxy = new RpcCallbackProxy(this.config, this.container);
   }
 
-  public resolve<T extends HttpServer>(applicationRef: T, basePath: string): Map<string, RouterProxyCallback> {
+  public resolve<T extends HttpServer>(_: T, basePath: string): Map<string, RouterProxyCallback> {
     const modules = this.container.getModules();
     const handlers = new Map<string, RouterProxyCallback>();
     modules.forEach((module, moduleName) => {
@@ -51,7 +49,7 @@ export class RpcRoutesResolver implements Resolver {
 
   public registerRouters(routes: RpcMethodHandler[], moduleKey: string, basePath: string): RpcProxyHandler[] {
     const path = basePath + this.rpcConfig.path;
-    return routes.map((rpcMethodHandler) => {
+    const result = routes.map((rpcMethodHandler) => {
       const { instanceWrapper, rpcMethodName } = rpcMethodHandler;
       const { metatype } = instanceWrapper;
 
@@ -62,6 +60,8 @@ export class RpcRoutesResolver implements Resolver {
 
       return { proxy, method: rpcMethodName };
     });
+
+    return result;
   }
 
   // tslint:disable-next-line:no-empty
