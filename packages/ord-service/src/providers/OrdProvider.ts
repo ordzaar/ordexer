@@ -51,7 +51,7 @@ export class OrdProvider {
     }
 
     if (response.status !== 200) {
-      throw new OrdError(`ORD request failed with status ${response.status}`);
+      throw new OrdError(`ORD request failed. Status: ${response.status}, Message: ${response.data}`);
     }
 
     return response.data as R;
