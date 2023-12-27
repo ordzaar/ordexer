@@ -94,6 +94,20 @@ export class OrdProvider {
   async getInscriptionsForIds(ids: string[]): Promise<OrdInscription[]> {
     return this.call<OrdInscription[]>(`/inscriptions?`, { ids });
   }
+
+  async getOrdinals(outpoint: string): Promise<Ordinal[]> {
+    return this.call<Ordinal[]>(`/ordinals/${outpoint}`);
+  }
+
+  async getSafeToSpendState(ordinals: Ordinal[], allowedRarity: Rarity[] = ["common", "uncommon"]): Promise<boolean> {
+    // eslint-disable-next-line no-restricted-syntax
+    for (const ordinal of ordinals) {
+      if (allowedRarity.includes(ordinal.rarity) === false) {
+        return false;
+      }
+    }
+    return true;
+  }
 }
 
 export type DetailedInscription = {
@@ -126,3 +140,24 @@ export type OrdInscription = {
   satpoint: string;
   timestamp: number;
 };
+
+export type Ordinal = {
+  number: number;
+  decimal: string;
+  degree: string;
+  name: string;
+  height: number;
+  cycle: number;
+  epoch: number;
+  period: number;
+  offset: number;
+  rarity: Rarity;
+  output: string;
+  start: number;
+  end: number;
+  size: number;
+};
+
+export const rarity = ["common", "uncommon", "rare", "epic", "legendary", "mythic"];
+
+export type Rarity = (typeof rarity)[number];
