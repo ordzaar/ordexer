@@ -13,13 +13,6 @@ export class GetBalanceDTO {
   }
 }
 
-export type GetSpendablesOptions = {
-  address: string;
-  value: number;
-  safetospend?: boolean;
-  filter?: string[];
-};
-
 export class GetSpendablesDTO {
   @IsString()
   @IsNotEmpty()
@@ -50,15 +43,6 @@ export type SpendableDto = {
   n: number;
   sats: number;
   scriptPubKey: ScriptPubKey;
-};
-
-export type GetUnspentsOptions = {
-  address: string;
-  options?: {
-    allowedRarity?: Rarity[];
-    safetospend?: boolean;
-  };
-  sort?: "asc" | "desc";
 };
 
 export class GetUnspentsOptionsDTO {
