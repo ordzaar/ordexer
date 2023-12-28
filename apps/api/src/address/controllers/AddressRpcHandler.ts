@@ -9,11 +9,11 @@ export class AddressRpcHandler {
   constructor(private addressService: AddressService) {}
 
   @RpcMethodHandler("GetBalance")
-  public getBalance(
-    @RpcPayload({ transform: true, whitelist: true, validateCustomDecorators: true })
+  public async getBalance(
+    @RpcPayload(new ValidationPipe({ transform: true, whitelist: true, validateCustomDecorators: true }))
     payload: GetBalanceDTO,
   ): Promise<number> {
-    const balance = this.addressService.getBalance(payload);
+    const balance = await this.addressService.getBalance(payload);
     return balance;
   }
 
@@ -27,11 +27,11 @@ export class AddressRpcHandler {
   }
 
   @RpcMethodHandler("GetUnspents")
-  public getUnspents(
+  public async getUnspents(
     @RpcPayload(new ValidationPipe({ transform: true, whitelist: true, validateCustomDecorators: true }))
     payload: GetUnspentsDTO,
   ): Promise<UnspentDto[]> {
-    const unspents = this.addressService.getUnspents(payload);
+    const unspents = await this.addressService.getUnspents(payload);
     return unspents;
   }
 }
