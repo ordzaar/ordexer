@@ -1,8 +1,8 @@
 import { ValidationPipe } from "@nestjs/common";
 import { RpcHandler, RpcMethodHandler, RpcPayload } from "@ordzaar/http-json-rpc";
 
-import { GetBalanceDTO, GetSpendablesDTO, GetUnspentsDTO, SpendableDto, UnspentDto } from "./models/Address";
-import { AddressService } from "./services/AddressService";
+import { GetBalanceDTO, GetSpendablesDTO, GetUnspentsDTO, SpendableDto, UnspentDto } from "../models/Address";
+import { AddressService } from "../services/AddressService";
 
 @RpcHandler({ method: "Address" })
 export class AddressRpcHandler {

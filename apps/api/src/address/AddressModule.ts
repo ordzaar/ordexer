@@ -3,8 +3,8 @@ import { BitcoinModule } from "@ordzaar/bitcoin-service";
 import { OrdModule } from "@ordzaar/ord-service";
 
 import { PrismaModule } from "../PrismaModule";
-import { AddressRpcHandler } from "./AddressRpcHandler";
 import { AddressController } from "./controllers/AddressController";
+import { AddressRpcHandler } from "./controllers/AddressRpcHandler";
 import { AddressService } from "./services/AddressService";
 
 @Module({
