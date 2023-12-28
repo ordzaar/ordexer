@@ -18,8 +18,6 @@ export class AddressService {
   }
 
   async getBalance({ address }: GetBalanceDTO): Promise<number> {
-    this.logger.log(`getBalance(${address})`);
-
     const outputs = await this.prisma.output.findMany({
       where: {
         addresses: {
@@ -59,8 +57,6 @@ export class AddressService {
   }
 
   async getSpendables({ address, value, safetospend = true, filter = [] }: GetSpendablesDTO): Promise<SpendableDto[]> {
-    this.logger.log(`getSpendables(${address})`);
-
     const spendables: SpendableDto[] = [];
     let totalValue = 0;
 
@@ -121,8 +117,6 @@ export class AddressService {
   }
 
   async getUnspents({ address, options = {}, sort = "desc" }: GetUnspentsDTO): Promise<UnspentDto[]> {
-    this.logger.log(`getUnspents(${address})`);
-
     const height = await this.rpc.getBlockCount();
     const unspents: UnspentDto[] = [];
 
