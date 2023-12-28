@@ -1,17 +1,15 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
 import { BitcoinService } from "@ordzaar/bitcoin-service";
 import { OrdProvider } from "@ordzaar/ord-service";
 
 import { PrismaService } from "../../PrismaService";
-import { GetSpendablesOptions, GetUnspentsOptions, SpendableDto, UnspentDto } from "../models/Address";
+import { GetBalanceDTO, GetSpendablesDTO, GetUnspentsDTO, SpendableDto, UnspentDto } from "../models/Address";
 
 @Injectable()
 export class AddressService {
   private readonly logger;
 
   constructor(
-    private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
     private rpc: BitcoinService,
     private ord: OrdProvider,
@@ -19,7 +17,7 @@ export class AddressService {
     this.logger = new Logger(AddressService.name);
   }
 
-  async getBalance(address: string): Promise<number> {
+  async getBalance({ address }: GetBalanceDTO): Promise<number> {
     this.logger.log(`getBalance(${address})`);
 
     let balance = 0;
@@ -60,12 +58,7 @@ export class AddressService {
     return balance;
   }
 
-  async getSpendables({
-    address,
-    value,
-    safetospend = true,
-    filter = [],
-  }: GetSpendablesOptions): Promise<SpendableDto[]> {
+  async getSpendables({ address, value, safetospend = true, filter = [] }: GetSpendablesDTO): Promise<SpendableDto[]> {
     this.logger.log(`getSpendables(${address})`);
 
     const spendables = [];
@@ -130,7 +123,7 @@ export class AddressService {
     return spendables;
   }
 
-  async getUnspents({ address, options = {}, sort = "desc" }: GetUnspentsOptions): Promise<UnspentDto[]> {
+  async getUnspents({ address, options = {}, sort = "desc" }: GetUnspentsDTO): Promise<UnspentDto[]> {
     this.logger.log(`getUnspents(${address})`);
 
     const height = await this.rpc.getBlockCount();

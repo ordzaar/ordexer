@@ -1,26 +1,37 @@
 import { ValidationPipe } from "@nestjs/common";
 import { RpcHandler, RpcMethodHandler, RpcPayload } from "@ordzaar/http-json-rpc";
-import { IsNotEmpty, IsString } from "class-validator";
 
-export class GetTransactionDTO {
-  @IsString()
-  @IsNotEmpty()
-  address: string;
-
-  constructor(address: string) {
-    this.address = address;
-  }
-}
+import { GetBalanceDTO, GetSpendablesDTO, GetUnspentsDTO, SpendableDto, UnspentDto } from "./models/Address";
+import { AddressService } from "./services/AddressService";
 
 @RpcHandler({ method: "Address" })
 export class AddressRpcHandler {
-  @RpcMethodHandler("GetTransactions")
-  public getTransactions(
+  constructor(private addressService: AddressService) {}
+
+  @RpcMethodHandler("GetBalance")
+  public getBalance(
+    @RpcPayload({ transform: true, whitelist: true, validateCustomDecorators: true })
+    payload: GetBalanceDTO,
+  ): Promise<number> {
+    const balance = this.addressService.getBalance(payload);
+    return balance;
+  }
+
+  @RpcMethodHandler("GetSpendables")
+  public async getSpendables(
     @RpcPayload(new ValidationPipe({ transform: true, whitelist: true, validateCustomDecorators: true }))
-    payload: GetTransactionDTO,
-  ) {
-    // eslint-disable-next-line no-console
-    console.log(payload);
-    return payload;
+    payload: GetSpendablesDTO,
+  ): Promise<SpendableDto[]> {
+    const spendables = await this.addressService.getSpendables(payload);
+    return spendables;
+  }
+
+  @RpcMethodHandler("GetUnspents")
+  public getUnspents(
+    @RpcPayload(new ValidationPipe({ transform: true, whitelist: true, validateCustomDecorators: true }))
+    payload: GetUnspentsDTO,
+  ): Promise<UnspentDto[]> {
+    const unspents = this.addressService.getUnspents(payload);
+    return unspents;
   }
 }
