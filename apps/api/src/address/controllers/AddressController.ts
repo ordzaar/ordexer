@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Param } from "@nestjs/common";
 
-import { GetSpendablesOptions } from "../models/Address";
+import { GetSpendablesOptions, GetUnspentsOptions } from "../models/Address";
 import { AddressService } from "../services/AddressService";
 
 @Controller("address")
@@ -20,8 +20,8 @@ export class AddressController {
   }
 
   @Get("getUnspents/:address")
-  async getUnspents(@Param("address") address: string) {
-    const unspents = await this.addressService.getUnspents(address);
+  async getUnspents(@Param("address") getUnspentsOptions: GetUnspentsOptions) {
+    const unspents = await this.addressService.getUnspents(getUnspentsOptions);
     return { unspents };
   }
 }

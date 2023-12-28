@@ -4,7 +4,7 @@ import { BitcoinService } from "@ordzaar/bitcoin-service";
 import { OrdProvider } from "@ordzaar/ord-service";
 
 import { PrismaService } from "../../PrismaService";
-import { GetSpendablesOptions, SpendableDto } from "../models/Address";
+import { GetSpendablesOptions, GetUnspentsOptions, SpendableDto, UnspentDto } from "../models/Address";
 
 @Injectable()
 export class AddressService {
@@ -130,8 +130,58 @@ export class AddressService {
     return spendables;
   }
 
-  async getUnspents(address: string): Promise<any> {
+  async getUnspents({ address, options = {}, sort = "desc" }: GetUnspentsOptions): Promise<UnspentDto[]> {
     this.logger.log(`getUnspents(${address})`);
-    return {};
+
+    const height = await this.rpc.getBlockCount();
+    const unspents: UnspentDto[] = [];
+
+    const outputs = await this.prisma.output.findMany({
+      where: {
+        addresses: {
+          has: address,
+        },
+        spent: false,
+        vinBlockHash: null,
+        vinBlockHeight: null,
+        vinTxid: null,
+        vinTxIndex: null,
+      },
+      include: {
+        inscriptions: true,
+      },
+      orderBy: {
+        value: sort,
+      },
+    });
+
+    // eslint-disable-next-line no-restricted-syntax
+    for (const output of outputs) {
+      const outpoint = `${output.voutTxid}:${output.voutTxIndex}`;
+
+      const unspent = {
+        txid: output.voutTxid,
+        n: output.voutTxIndex,
+        sats: output.value,
+        scriptPubKey: output.scriptPubKey,
+      } as UnspentDto;
+
+      const ordinals = await this.ord.getOrdinals(outpoint);
+      const { inscriptions } = output;
+
+      unspent.ordinals = ordinals;
+      unspent.inscriptions = inscriptions;
+      unspent.safeToSpend = await this.ord.getSafeToSpendState(ordinals, options.allowedRarity);
+      unspent.confirmations = height - output.voutBlockHeight + 1;
+
+      if (options.safetospend && !unspent.safeToSpend) {
+        // eslint-disable-next-line no-continue
+        continue;
+      }
+
+      unspents.push(unspent);
+    }
+
+    return unspents;
   }
 }
