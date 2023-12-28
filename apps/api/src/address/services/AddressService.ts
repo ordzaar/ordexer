@@ -20,7 +20,6 @@ export class AddressService {
   async getBalance({ address }: GetBalanceDTO): Promise<number> {
     this.logger.log(`getBalance(${address})`);
 
-    let balance = 0;
     const outputs = await this.prisma.output.findMany({
       where: {
         addresses: {
@@ -34,34 +33,35 @@ export class AddressService {
       },
     });
 
-    // eslint-disable-next-line no-restricted-syntax
-    for (const output of outputs) {
-      if (!output.value) {
-        // We should not end up here
-        // If we end up in this block, it means that the output is not indexed correctly
-        this.logger.error(`[API|GET_ADDRESS] Output ${output.id} has no value`);
-        const tx = await this.rpc.getRawTransaction(output.voutTxid, true);
-        if (tx === undefined) {
-          // eslint-disable-next-line no-continue
-          continue;
+    const outputValues = await Promise.all(
+      outputs.map(async (output) => {
+        if (!output.value) {
+          // We should not end up here
+          // If we end up in this block, it means that the output is not indexed correctly
+          this.logger.error(`[API|GET_ADDRESS] Output ${output.id} has no value`);
+          const tx = await this.rpc.getRawTransaction(output.voutTxid, true);
+          if (tx === undefined) {
+            return 0;
+          }
+          const vout = tx.vout[output.voutTxIndex];
+          if (vout === undefined || vout.value === undefined) {
+            return 0;
+          }
+          return vout.value;
         }
-        const vout = tx.vout[output.voutTxIndex];
-        if (vout === undefined || vout.value === undefined) {
-          // eslint-disable-next-line no-continue
-          continue;
-        }
-        balance += vout.value;
-      } else {
-        balance += output.value;
-      }
-    }
+        return output.value;
+      }),
+    );
+
+    const balance = outputValues.reduce((a, b) => a + b, 0);
+
     return balance;
   }
 
   async getSpendables({ address, value, safetospend = true, filter = [] }: GetSpendablesDTO): Promise<SpendableDto[]> {
     this.logger.log(`getSpendables(${address})`);
 
-    const spendables = [];
+    const spendables: SpendableDto[] = [];
     let totalValue = 0;
 
     const outputs = await this.prisma.output.findMany({
@@ -86,21 +86,18 @@ export class AddressService {
       },
     });
 
-    // eslint-disable-next-line no-restricted-syntax
-    for (const output of outputs) {
+    outputs.forEach(async (output) => {
       const outpoint = `${output.voutTxid}:${output.voutTxIndex}`;
 
       if (filter.includes(outpoint)) {
-        // eslint-disable-next-line no-continue
-        continue;
+        return;
       }
 
       if (safetospend) {
         const ordinals = await this.ord.getOrdinals(outpoint);
         const safeToSpend = await this.ord.getSafeToSpendState(ordinals);
         if (!safeToSpend) {
-          // eslint-disable-next-line no-continue
-          continue;
+          return;
         }
       }
 
@@ -114,7 +111,7 @@ export class AddressService {
       } as SpendableDto;
 
       spendables.push(spendable);
-    }
+    });
 
     if (totalValue < value) {
       throw new Error("Insufficient funds");
@@ -148,8 +145,7 @@ export class AddressService {
       },
     });
 
-    // eslint-disable-next-line no-restricted-syntax
-    for (const output of outputs) {
+    outputs.forEach(async (output) => {
       const outpoint = `${output.voutTxid}:${output.voutTxIndex}`;
 
       const unspent = {
@@ -168,12 +164,11 @@ export class AddressService {
       unspent.confirmations = height - output.voutBlockHeight + 1;
 
       if (options.safetospend && !unspent.safeToSpend) {
-        // eslint-disable-next-line no-continue
-        continue;
+        return;
       }
 
       unspents.push(unspent);
-    }
+    });
 
     return unspents;
   }
