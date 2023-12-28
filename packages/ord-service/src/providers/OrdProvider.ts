@@ -5,6 +5,7 @@ import { AxiosResponse } from "axios";
 import { networks } from "bitcoinjs-lib";
 
 import { OrdError } from "../errors/OrdError";
+import { Rarity } from "../utils/Rarity";
 
 @Injectable()
 export class OrdProvider {
@@ -98,16 +99,6 @@ export class OrdProvider {
   async getOrdinals(outpoint: string): Promise<Ordinal[]> {
     return this.call<Ordinal[]>(`/ordinals/${outpoint}`);
   }
-
-  async getSafeToSpendState(ordinals: Ordinal[], allowedRarity: Rarity[] = ["common", "uncommon"]): Promise<boolean> {
-    // eslint-disable-next-line no-restricted-syntax
-    for (const ordinal of ordinals) {
-      if (allowedRarity.includes(ordinal.rarity) === false) {
-        return false;
-      }
-    }
-    return true;
-  }
 }
 
 export type DetailedInscription = {
@@ -157,7 +148,3 @@ export type Ordinal = {
   end: number;
   size: number;
 };
-
-export const rarity = ["common", "uncommon", "rare", "epic", "legendary", "mythic"];
-
-export type Rarity = (typeof rarity)[number];

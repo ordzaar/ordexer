@@ -1,6 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { BitcoinService } from "@ordzaar/bitcoin-service";
-import { OrdProvider } from "@ordzaar/ord-service";
+import { getSafeToSpendState, OrdProvider } from "@ordzaar/ord-service";
 
 import { PrismaService } from "../../PrismaService";
 import { GetBalanceDTO, GetSpendablesDTO, GetUnspentsDTO, SpendableDTO, UnspentDTO } from "../models/Address";
@@ -91,7 +91,7 @@ export class AddressService {
 
       if (safetospend) {
         const ordinals = await this.ord.getOrdinals(outpoint);
-        const safeToSpend = await this.ord.getSafeToSpendState(ordinals);
+        const safeToSpend = await getSafeToSpendState(ordinals);
         if (!safeToSpend) {
           return;
         }
@@ -154,7 +154,7 @@ export class AddressService {
 
       unspent.ordinals = ordinals;
       unspent.inscriptions = inscriptions;
-      unspent.safeToSpend = await this.ord.getSafeToSpendState(ordinals, options.allowedRarity);
+      unspent.safeToSpend = await getSafeToSpendState(ordinals, options.allowedRarity);
       unspent.confirmations = height - output.voutBlockHeight + 1;
 
       if (options.safetospend && !unspent.safeToSpend) {
