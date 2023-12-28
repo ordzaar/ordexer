@@ -10,6 +10,8 @@ import { CustomCacheInterceptor } from "./interceptors/CustomCacheInterceptor";
 import { CustomCacheModule } from "./modules/CustomCacheModule";
 import { CustomThrottlerModule } from "./modules/CustomThrottlerModule";
 import { HealthModule } from "./modules/HealthModule";
+import { OrdinalsModule } from "./ordinals/OrdinalsModule";
+import { TransactionsModule } from "./transactions/TransactionsModule";
 import { VersionModule } from "./version/VersionModule";
 
 @Module({
@@ -27,6 +29,9 @@ import { VersionModule } from "./version/VersionModule";
       path: "/rpc",
     }),
     VersionModule,
+    AddressModule,
+    OrdinalsModule,
+    TransactionsModule,
   ],
   controllers: [],
   providers: [
