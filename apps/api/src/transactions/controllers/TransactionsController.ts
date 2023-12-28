@@ -1,7 +1,7 @@
 import { Controller, Get, Param, Post } from "@nestjs/common";
 import { BitcoinService } from "@ordzaar/bitcoin-service";
 
-import { TransactionsService } from "./TransactionsService";
+import { TransactionsService } from "../services/TransactionsService";
 
 @Controller("transactions")
 export class TransactionsController {
