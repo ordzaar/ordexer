@@ -1,0 +1,36 @@
+{
+  "name": "@ordzaar/http-json-rpc",
+  "version": "0.0.0",
+  "description": "",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "private": true,
+  "scripts": {
+    "build": "tsc -b ./tsconfig.build.json",
+    "clean": "rm -rf dist"
+  },
+  "lint-staged": {
+    "*": [
+      "prettier --write --ignore-unknown"
+    ],
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --fix"
+    ]
+  },
+  "prettier": "@ordzaar/standard-prettier",
+  "dependencies": {
+    "lodash": "^4.17.21",
+    "rxjs": "7.8.1"
+  },
+  "devDependencies": {
+    "@ordzaar/standard-linter": "^0.4.11",
+    "@ordzaar/standard-prettier": "^0.4.11",
+    "@ordzaar/standard-typescript": "^0.4.11",
+    "@stickyjs/testcontainers": "^1.3.4",
+    "@types/lodash": "^4.14.202",
+    "testcontainers": "^10.3.2"
+  }
+}
