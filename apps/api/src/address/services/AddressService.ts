@@ -3,7 +3,7 @@ import { BitcoinService } from "@ordzaar/bitcoin-service";
 import { OrdProvider } from "@ordzaar/ord-service";
 
 import { PrismaService } from "../../PrismaService";
-import { GetBalanceDTO, GetSpendablesDTO, GetUnspentsDTO, SpendableDto, UnspentDto } from "../models/Address";
+import { GetBalanceDTO, GetSpendablesDTO, GetUnspentsDTO, SpendableDTO, UnspentDTO } from "../models/Address";
 
 @Injectable()
 export class AddressService {
@@ -56,8 +56,8 @@ export class AddressService {
     return balance;
   }
 
-  async getSpendables({ address, value, safetospend = true, filter = [] }: GetSpendablesDTO): Promise<SpendableDto[]> {
-    const spendables: SpendableDto[] = [];
+  async getSpendables({ address, value, safetospend = true, filter = [] }: GetSpendablesDTO): Promise<SpendableDTO[]> {
+    const spendables: SpendableDTO[] = [];
     let totalValue = 0;
 
     const outputs = await this.prisma.output.findMany({
@@ -104,7 +104,7 @@ export class AddressService {
         n: output.voutTxIndex,
         sats: output.value,
         scriptPubKey: output.scriptPubKey,
-      } as SpendableDto;
+      } as SpendableDTO;
 
       spendables.push(spendable);
     });
@@ -116,9 +116,9 @@ export class AddressService {
     return spendables;
   }
 
-  async getUnspents({ address, options = {}, sort = "desc" }: GetUnspentsDTO): Promise<UnspentDto[]> {
+  async getUnspents({ address, options = {}, sort = "desc" }: GetUnspentsDTO): Promise<UnspentDTO[]> {
     const height = await this.rpc.getBlockCount();
-    const unspents: UnspentDto[] = [];
+    const unspents: UnspentDTO[] = [];
 
     const outputs = await this.prisma.output.findMany({
       where: {
@@ -147,7 +147,7 @@ export class AddressService {
         n: output.voutTxIndex,
         sats: output.value,
         scriptPubKey: output.scriptPubKey,
-      } as UnspentDto;
+      } as UnspentDTO;
 
       const ordinals = await this.ord.getOrdinals(outpoint);
       const { inscriptions } = output;

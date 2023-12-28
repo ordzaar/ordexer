@@ -1,7 +1,7 @@
 import { ValidationPipe } from "@nestjs/common";
 import { RpcHandler, RpcMethodHandler, RpcPayload } from "@ordzaar/http-json-rpc";
 
-import { GetBalanceDTO, GetSpendablesDTO, GetUnspentsDTO, SpendableDto, UnspentDto } from "../models/Address";
+import { GetBalanceDTO, GetSpendablesDTO, GetUnspentsDTO, SpendableDTO, UnspentDTO } from "../models/Address";
 import { AddressService } from "../services/AddressService";
 
 @RpcHandler({ method: "Address" })
@@ -21,7 +21,7 @@ export class AddressRpcHandler {
   public async getSpendables(
     @RpcPayload(new ValidationPipe({ transform: true, whitelist: true, validateCustomDecorators: true }))
     payload: GetSpendablesDTO,
-  ): Promise<SpendableDto[]> {
+  ): Promise<SpendableDTO[]> {
     const spendables = await this.addressService.getSpendables(payload);
     return spendables;
   }
@@ -30,7 +30,7 @@ export class AddressRpcHandler {
   public async getUnspents(
     @RpcPayload(new ValidationPipe({ transform: true, whitelist: true, validateCustomDecorators: true }))
     payload: GetUnspentsDTO,
-  ): Promise<UnspentDto[]> {
+  ): Promise<UnspentDTO[]> {
     const unspents = await this.addressService.getUnspents(payload);
     return unspents;
   }

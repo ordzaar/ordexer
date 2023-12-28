@@ -30,6 +30,8 @@ export class GetSpendablesDTO {
   @IsOptional()
   filter?: string[];
 
+  // TODO: Pagination
+
   constructor(address: string, value: number, safetospend?: boolean, filter?: string[]) {
     this.address = address;
     this.value = value;
@@ -38,7 +40,7 @@ export class GetSpendablesDTO {
   }
 }
 
-export type SpendableDto = {
+export type SpendableDTO = {
   txid: string;
   n: number;
   sats: number;
@@ -53,6 +55,8 @@ export class GetUnspentsOptionsDTO {
   @IsBoolean()
   @IsOptional()
   safetospend?: boolean;
+
+  // TODO: Pagination
 
   constructor(allowedRarity?: Rarity[], safetospend?: boolean) {
     this.allowedRarity = allowedRarity;
@@ -81,7 +85,7 @@ export class GetUnspentsDTO {
   }
 }
 
-export type UnspentDto = {
+export type UnspentDTO = {
   txid: string;
   n: number;
   sats: number;
