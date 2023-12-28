@@ -4,10 +4,11 @@ import { OrdModule } from "@ordzaar/ord-service";
 
 import { PrismaModule } from "../PrismaModule";
 import { OrdinalsController } from "./OrdinalsController";
+import { OrdinalsService } from "./OrdinalsService";
 
 @Module({
   imports: [PrismaModule, BitcoinModule, OrdModule],
-  providers: [],
+  providers: [OrdinalsService],
   controllers: [OrdinalsController],
   exports: [],
 })
