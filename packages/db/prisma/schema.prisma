@@ -39,10 +39,10 @@ model Output {
 
   @@index([voutBlockHeight])
   @@unique([voutTxid, voutTxIndex])
-  @@index([voutTxid, voutTxIndex], type: Hash)
+  @@index([voutTxid], type: Hash)
   @@index([vinBlockHeight])
   @@unique([vinTxid, vinTxIndex])
-  @@index([vinTxid, vinTxIndex], type: Hash)
+  @@index([vinTxid], type: Hash)
   @@index([addresses(ops:ArrayOps)], type: Gin)
   @@index([spent])
 }
