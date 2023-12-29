@@ -1,4 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { BitcoinService } from "@ordzaar/bitcoin-service";
 import { getSafeToSpendState, OrdProvider } from "@ordzaar/ord-service";
 
@@ -11,6 +12,7 @@ export class AddressService {
   private readonly logger;
 
   constructor(
+    private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
     private rpc: BitcoinService,
     private ord: OrdProvider,
@@ -83,7 +85,9 @@ export class AddressService {
       },
     });
 
-    const outputPromiseLimiter = promiseLimiter(10);
+    const outputPromiseLimiter = promiseLimiter(
+      this.configService.getOrThrow<number>("api.addresses.outputPromiseLimiter"),
+    );
 
     outputs.forEach(async (output) => {
       outputPromiseLimiter.push(async () => {
