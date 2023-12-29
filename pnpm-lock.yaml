@@ -92,6 +92,9 @@ importers:
       joi:
         specifier: ^17.11.0
         version: 17.11.0
+      p-limit:
+        specifier: ^3.1.0
+        version: 3.1.0
       pg:
         specifier: ^8.11.3
         version: 8.11.3

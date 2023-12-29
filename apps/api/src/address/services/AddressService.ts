@@ -3,6 +3,7 @@ import { BitcoinService } from "@ordzaar/bitcoin-service";
 import { getSafeToSpendState, OrdProvider } from "@ordzaar/ord-service";
 
 import { PrismaService } from "../../PrismaService";
+import { promiseLimiter } from "../../utils/Promise";
 import { GetBalanceDTO, GetSpendablesDTO, GetUnspentsDTO, SpendableDTO, UnspentDTO } from "../models/Address";
 
 @Injectable()
@@ -82,32 +83,38 @@ export class AddressService {
       },
     });
 
+    const outputPromiseLimiter = promiseLimiter(10);
+
     outputs.forEach(async (output) => {
-      const outpoint = `${output.voutTxid}:${output.voutTxIndex}`;
+      outputPromiseLimiter.push(async () => {
+        const outpoint = `${output.voutTxid}:${output.voutTxIndex}`;
 
-      if (filter.includes(outpoint)) {
-        return;
-      }
-
-      if (safetospend) {
-        const ordinals = await this.ord.getOrdinals(outpoint);
-        const safeToSpend = await getSafeToSpendState(ordinals);
-        if (!safeToSpend) {
+        if (filter.includes(outpoint)) {
           return;
         }
-      }
 
-      totalValue += output.value;
+        if (safetospend) {
+          const ordinals = await this.ord.getOrdinals(outpoint);
+          const safeToSpend = await getSafeToSpendState(ordinals);
+          if (!safeToSpend) {
+            return;
+          }
+        }
 
-      const spendable = {
-        txid: output.voutTxid,
-        n: output.voutTxIndex,
-        sats: output.value,
-        scriptPubKey: output.scriptPubKey,
-      } as SpendableDTO;
+        totalValue += output.value;
 
-      spendables.push(spendable);
+        const spendable = {
+          txid: output.voutTxid,
+          n: output.voutTxIndex,
+          sats: output.value,
+          scriptPubKey: output.scriptPubKey,
+        } as SpendableDTO;
+
+        spendables.push(spendable);
+      });
     });
+
+    await outputPromiseLimiter.run();
 
     if (totalValue < value) {
       throw new Error("Insufficient funds");
@@ -117,27 +124,29 @@ export class AddressService {
   }
 
   async getUnspents({ address, options = {}, sort = "desc" }: GetUnspentsDTO): Promise<UnspentDTO[]> {
-    const height = await this.rpc.getBlockCount();
     const unspents: UnspentDTO[] = [];
 
-    const outputs = await this.prisma.output.findMany({
-      where: {
-        addresses: {
-          has: address,
+    const [height, outputs] = await Promise.all([
+      this.rpc.getBlockCount(),
+      this.prisma.output.findMany({
+        where: {
+          addresses: {
+            has: address,
+          },
+          spent: false,
+          vinBlockHash: null,
+          vinBlockHeight: null,
+          vinTxid: null,
+          vinTxIndex: null,
         },
-        spent: false,
-        vinBlockHash: null,
-        vinBlockHeight: null,
-        vinTxid: null,
-        vinTxIndex: null,
-      },
-      include: {
-        inscriptions: true,
-      },
-      orderBy: {
-        value: sort,
-      },
-    });
+        include: {
+          inscriptions: true,
+        },
+        orderBy: {
+          value: sort,
+        },
+      }),
+    ]);
 
     outputs.forEach(async (output) => {
       const outpoint = `${output.voutTxid}:${output.voutTxIndex}`;
