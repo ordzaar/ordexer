@@ -39,7 +39,10 @@ model Output {
 
   @@index([voutBlockHeight])
   @@unique([voutTxid, voutTxIndex])
+  @@index([voutTxid, voutTxIndex], type: Hash)
+  @@index([vinBlockHeight])
   @@unique([vinTxid, vinTxIndex])
+  @@index([vinTxid, vinTxIndex], type: Hash)
   @@index([addresses(ops:ArrayOps)], type: Gin)
   @@index([spent])
 }
@@ -78,12 +81,11 @@ model Inscription {
   @@index(inscriptionId, type: Hash)
   @@index(height)
   @@index(number)
-  @@index(outpoint)
+  @@index(outpoint, type: Hash)
   @@index(sat)
   @@index(mimeType)
   @@index(mimeSubtype)
   @@index(mediaType)
-
 }
 
 model MediaContent {
