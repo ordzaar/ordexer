@@ -1,11 +1,17 @@
 /* eslint-disable no-param-reassign */
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { BitcoinService, GetExpandedTransactionOptions, isCoinbase, RawTransaction } from "@ordzaar/bitcoin-service";
+import {
+  BitcoinService,
+  DecodedTransaction,
+  GetExpandedTransactionOptions,
+  isCoinbase,
+  RawTransaction,
+} from "@ordzaar/bitcoin-service";
 import { OrdProvider } from "@ordzaar/ord-service";
 
 import { PrismaService } from "../../PrismaService";
-import { ExpandedTransaction, GetTransactionDTO } from "../models/Transactions";
+import { ExpandedTransaction, GetTransactionDTO, RelayDTO } from "../models/Transactions";
 
 @Injectable()
 export class TransactionsService {
@@ -28,9 +34,19 @@ export class TransactionsService {
     return this.getExpandedTransaction(tx, options);
   }
 
-  async relay(): Promise<any> {
+  async relay({ hex, maxFeeRate, validate = false }: RelayDTO): Promise<any> {
     this.logger.log(`relay()`);
-    return {};
+    const tx = await this.rpc.decodeRawTransaction(hex);
+    if (validate === true) {
+      await this.validateUtxos(tx);
+    }
+    const result = await this.rpc.sendRawTransaction(hex, maxFeeRate);
+    if (result === undefined) {
+      throw new Error("Transaction not accepted by mempool");
+    }
+
+    await this.setSpentUtxos(tx);
+    return result;
   }
 
   async getExpandedTransaction(
@@ -103,5 +119,53 @@ export class TransactionsService {
     (tx as any).blockheight = (await this.rpc.getBlockCount()) - tx.confirmations + 1;
 
     return tx as ExpandedTransaction;
+  }
+
+  async validateUtxos(tx: DecodedTransaction): Promise<void> {
+    const errors: {
+      missing: string[];
+      spent: string[];
+    } = {
+      missing: [],
+      spent: [],
+    };
+
+    tx.vin.forEach(async (vin) => {
+      const utxo = await this.prisma.output.findUnique({
+        where: {
+          voutTxid_voutTxIndex: {
+            voutTxid: vin.txid,
+            voutTxIndex: vin.vout,
+          },
+        },
+      });
+      if (utxo === null) {
+        errors.missing.push(`${vin.txid}:${vin.vout}`);
+        return;
+      }
+      if (utxo.spent === true || (utxo.vinTxid !== null && utxo.vinTxIndex !== null)) {
+        errors.spent.push(`${vin.txid}:${vin.vout}`);
+      }
+    });
+
+    if (errors.missing.length > 0 || errors.spent.length > 0) {
+      throw new Error("Transaction validation failed");
+    }
+  }
+
+  async setSpentUtxos(tx: DecodedTransaction): Promise<void> {
+    tx.vin.forEach(async (vin) => {
+      await this.prisma.output.update({
+        where: {
+          voutTxid_voutTxIndex: {
+            voutTxid: vin.txid,
+            voutTxIndex: vin.vout,
+          },
+        },
+        data: {
+          spent: true,
+        },
+      });
+    });
   }
 }

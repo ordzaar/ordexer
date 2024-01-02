@@ -1,6 +1,6 @@
 import { RawTransaction, Vout } from "@ordzaar/bitcoin-service";
 import { Type } from "class-transformer";
-import { IsBoolean, IsNotEmpty, IsObject, IsOptional, IsString, ValidateNested } from "class-validator";
+import { IsBoolean, IsNotEmpty, IsNumber, IsObject, IsOptional, IsString, ValidateNested } from "class-validator";
 
 export class GetTransactionOptionsDTO {
   @IsBoolean()
@@ -53,3 +53,23 @@ export type ExpandedTransaction = RawTransaction & {
   fee: number;
   blockheight: number;
 };
+
+export class RelayDTO {
+  @IsString()
+  @IsNotEmpty()
+  hex: string;
+
+  @IsNumber()
+  @IsOptional()
+  maxFeeRate?: number;
+
+  @IsBoolean()
+  @IsOptional()
+  validate?: boolean;
+
+  constructor(hex: string, maxFeeRate?: number, validate?: boolean) {
+    this.hex = hex;
+    this.maxFeeRate = maxFeeRate;
+    this.validate = validate;
+  }
+}

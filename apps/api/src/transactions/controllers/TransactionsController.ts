@@ -1,7 +1,7 @@
 import { Body, Controller, Post } from "@nestjs/common";
 import { BitcoinService } from "@ordzaar/bitcoin-service";
 
-import { GetTransactionDTO } from "../models/Transactions";
+import { GetTransactionDTO, RelayDTO } from "../models/Transactions";
 import { TransactionsService } from "../services/TransactionsService";
 
 @Controller("transactions")
@@ -18,8 +18,8 @@ export class TransactionsController {
   }
 
   @Post("relay")
-  async relay() {
-    const relay = await this.transactionsService.relay();
+  async relay(@Body() relayOptions: RelayDTO) {
+    const relay = await this.transactionsService.relay(relayOptions);
     return { relay };
   }
 }
