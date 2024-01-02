@@ -33,13 +33,18 @@ model Output {
   vinTxid           String?
   vinTxIndex        Int?
   
-  spent             Boolean               @default(true)
+  spent             Boolean               @default(false)
 
   inscriptions      Inscription[]
 
   @@index([voutBlockHeight])
   @@unique([voutTxid, voutTxIndex])
+  @@index([voutTxid], type: Hash)
+  @@index([vinBlockHeight])
   @@unique([vinTxid, vinTxIndex])
+  @@index([vinTxid], type: Hash)
+  @@index([addresses(ops:ArrayOps)], type: Gin)
+  @@index([spent])
 }
 
 model Inscription {
@@ -49,11 +54,11 @@ model Inscription {
   outputId          String?
   creator           String
   owner             String?
-  sat               BigInt
-  mimeType          String
-  mimeSubtype       String
-  mediaType         String
-  mediaCharset      String
+  sat               BigInt?
+  mimeType          String?
+  mimeSubtype       String?
+  mediaType         String?
+  mediaCharset      String?
   // Media Size in bytes. Int4 is sufficient, should not exceed 2GB.
   mediaSize         Int
   // Media Content is split into a separate table keep Inscription table small
@@ -73,14 +78,14 @@ model Inscription {
   meta              Json?
   ometa             Json?
 
+  @@index(inscriptionId, type: Hash)
   @@index(height)
   @@index(number)
-  @@index(outpoint)
+  @@index(outpoint, type: Hash)
   @@index(sat)
   @@index(mimeType)
   @@index(mimeSubtype)
   @@index(mediaType)
-
 }
 
 model MediaContent {

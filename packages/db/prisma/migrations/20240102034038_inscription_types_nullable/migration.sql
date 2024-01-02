@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "Inscription" ALTER COLUMN "mimeType" DROP NOT NULL,
+ALTER COLUMN "mediaType" DROP NOT NULL,
+ALTER COLUMN "mediaCharset" DROP NOT NULL;
