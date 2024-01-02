@@ -54,7 +54,7 @@ model Inscription {
   outputId          String?
   creator           String
   owner             String?
-  sat               BigInt
+  sat               BigInt?
   mimeType          String
   mimeSubtype       String?
   mediaType         String
