@@ -1,6 +1,7 @@
 import { ValidationPipe } from "@nestjs/common";
 import { RpcHandler, RpcMethodHandler, RpcPayload } from "@ordzaar/http-json-rpc";
 
+import { GetTransactionDTO } from "../models/Transactions";
 import { TransactionsService } from "../services/TransactionsService";
 
 @RpcHandler({ method: "Transactions" })
@@ -10,12 +11,9 @@ export class TransactionsRpcHandler {
   @RpcMethodHandler("GetTransaction")
   public getTransaction(
     @RpcPayload(new ValidationPipe({ transform: true, whitelist: true, validateCustomDecorators: true }))
-    payload: {
-      id: string;
-    },
+    payload: GetTransactionDTO,
   ): Promise<any> {
-    const { id } = payload;
-    const transaction = this.transactionsService.getTransaction(id);
+    const transaction = this.transactionsService.getTransaction(payload);
     return transaction;
   }
 

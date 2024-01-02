@@ -133,7 +133,7 @@ export class BitcoinService {
     return this.rpc<string[]>("deriveaddresses", args);
   }
 
-  async getAddressesFromVout(vout: Vout) {
+  async getAddressesFromVout(vout: Vout): Promise<string[]> {
     if (vout.scriptPubKey.address !== undefined) {
       return [vout.scriptPubKey.address];
     }
@@ -318,4 +318,10 @@ export type TxOut = {
   value: number;
   scriptPubKey: ScriptPubKey;
   coinbase: boolean;
+};
+
+export type GetExpandedTransactionOptions = {
+  ord?: boolean;
+  hex?: boolean;
+  witness?: boolean;
 };
