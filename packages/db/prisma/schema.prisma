@@ -55,10 +55,10 @@ model Inscription {
   creator           String
   owner             String?
   sat               BigInt?
-  mimeType          String
+  mimeType          String?
   mimeSubtype       String?
-  mediaType         String
-  mediaCharset      String
+  mediaType         String?
+  mediaCharset      String?
   // Media Size in bytes. Int4 is sufficient, should not exceed 2GB.
   mediaSize         Int
   // Media Content is split into a separate table keep Inscription table small
