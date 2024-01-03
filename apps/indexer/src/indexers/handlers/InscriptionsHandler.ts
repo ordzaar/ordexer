@@ -209,11 +209,11 @@ export class InscriptionHandler extends BaseIndexerHandler {
           },
         },
         select: {
-          id: true,
+          inscriptionId: true,
         },
       });
       await this.commitTransfers(
-        docs.map((doc) => doc.id),
+        docs.map((doc) => doc.inscriptionId),
         prismaTx,
       );
       count += docs.length;
@@ -252,7 +252,7 @@ export class InscriptionHandler extends BaseIndexerHandler {
           data: {
             owner: output?.addresses[0] ?? "",
             outpoint: `${txid}:${n}`,
-            outputId: output?.id ?? "",
+            outputId: output?.id ?? null,
           },
         });
       }
