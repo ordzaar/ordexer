@@ -62,7 +62,7 @@ export class IndexerService {
       blockhash = block.nextblockhash;
     }
 
-    await this.commitVinVout(blockHeight);
+    await this.commitVinVout(blockHeight - 1);
   }
 
   async getReorgHeight(indexerBlockHeight: number, reorgBlockLength: number): Promise<number> {
