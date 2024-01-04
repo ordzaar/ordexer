@@ -133,7 +133,7 @@ export class BitcoinService {
     return this.rpc<string[]>("deriveaddresses", args);
   }
 
-  async getAddressesFromVout(vout: Vout) {
+  async getAddressesFromVout(vout: Vout): Promise<string[]> {
     if (vout.scriptPubKey.address !== undefined) {
       return [vout.scriptPubKey.address];
     }
@@ -149,6 +149,24 @@ export class BitcoinService {
       return this.deriveAddresses(vout.scriptPubKey.desc).catch(() => []);
     }
     return [];
+  }
+
+  async decodeRawTransaction(hex: string, isWitness?: boolean): Promise<DecodedTransaction> {
+    const args: [string, boolean?] = [hex];
+    if (isWitness !== undefined) {
+      args.push(isWitness);
+    }
+    return this.rpc<DecodedTransaction>("decoderawtransaction", [hex]);
+  }
+
+  async sendRawTransaction(hex: string, maxFeeRate?: number): Promise<string> {
+    const args: [string, number?] = [hex];
+    if (maxFeeRate !== undefined) {
+      args.push(maxFeeRate);
+    }
+    const txid = await this.rpc<string>("sendrawtransaction", args);
+    // TODO: Regtest Network
+    return txid;
   }
 }
 
@@ -318,4 +336,22 @@ export type TxOut = {
   value: number;
   scriptPubKey: ScriptPubKey;
   coinbase: boolean;
+};
+
+export type GetExpandedTransactionOptions = {
+  ord?: boolean;
+  hex?: boolean;
+  witness?: boolean;
+};
+
+export type DecodedTransaction = {
+  txid: string;
+  hash: string;
+  size: number;
+  vsize: number;
+  weight: number;
+  version: number;
+  locktime: number;
+  vin: Vin[];
+  vout: Vout[];
 };
