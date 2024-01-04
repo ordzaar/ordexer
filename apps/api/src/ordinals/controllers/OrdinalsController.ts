@@ -1,7 +1,8 @@
-import { Controller, Get, Param } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post } from "@nestjs/common";
 import { BitcoinService } from "@ordzaar/bitcoin-service";
 import { OrdProvider } from "@ordzaar/ord-service";
 
+import { GetInscriptionsDTO } from "../models/Ordinals";
 import { OrdinalsService } from "../services/OrdinalsService";
 
 @Controller("ordinals")
@@ -24,9 +25,9 @@ export class OrdinalsController {
     return { inscriptionUTXO };
   }
 
-  @Get("getInscriptions/")
-  async getInscriptions() {
-    const inscriptions = await this.ordinalsService.getInscriptions();
+  @Post("getInscriptions/")
+  async getInscriptions(@Body() getInscriptionsDTO: GetInscriptionsDTO) {
+    const inscriptions = await this.ordinalsService.getInscriptions(getInscriptionsDTO);
     return { inscriptions };
   }
 }

@@ -23,6 +23,7 @@
   "prettier": "@ordzaar/standard-prettier",
   "dependencies": {
     "@ordzaar/standard-api-fastify": "^0.4.11",
+    "big.js": "^6.2.1",
     "bitcoinjs-lib": "^6.1.5"
   },
   "devDependencies": {
