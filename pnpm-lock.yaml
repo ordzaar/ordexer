@@ -324,8 +324,8 @@ importers:
         specifier: ^0.4.11
         version: 0.4.11(typescript@5.2.2)
       '@stickyjs/testcontainers':
-        specifier: ^1.3.7
-        version: 1.3.7
+        specifier: ^1.3.10
+        version: 1.3.10
       testcontainers:
         specifier: ^10.4.0
         version: 10.4.0(encoding@0.1.13)
@@ -352,8 +352,8 @@ importers:
         specifier: ^0.4.11
         version: 0.4.11(typescript@5.2.2)
       '@stickyjs/testcontainers':
-        specifier: ^1.3.7
-        version: 1.3.7
+        specifier: ^1.3.10
+        version: 1.3.10
       prisma:
         specifier: ^5.7.1
         version: 5.7.1
@@ -383,8 +383,8 @@ importers:
         specifier: ^0.4.11
         version: 0.4.11(typescript@5.2.2)
       '@stickyjs/testcontainers':
-        specifier: ^1.3.4
-        version: 1.3.7
+        specifier: ^1.3.10
+        version: 1.3.10
       '@types/lodash':
         specifier: ^4.14.202
         version: 4.14.202
@@ -414,8 +414,8 @@ importers:
         specifier: ^0.4.11
         version: 0.4.11(typescript@5.2.2)
       '@stickyjs/testcontainers':
-        specifier: ^1.3.7
-        version: 1.3.7
+        specifier: ^1.3.10
+        version: 1.3.10
       testcontainers:
         specifier: ^10.4.0
         version: 10.4.0(encoding@0.1.13)
@@ -3063,8 +3063,8 @@ packages:
       '@sinonjs/commons': 3.0.0
     dev: true
 
-  /@stickyjs/testcontainers@1.3.7:
-    resolution: {integrity: sha512-svKO0MpYdVjAxsdhsfpxo/Pewkx/S/wqlxnd2IZLN9KTGXVFh4LsywNeLByZ4Xm0ZNAUtxTjaHXO4kJa15/CHQ==}
+  /@stickyjs/testcontainers@1.3.10:
+    resolution: {integrity: sha512-bsqeFYB/gM7tA5R6irOXiVYdSgwOdZWSspPEBFHViU2B8UNCMATyb9tYRpf3Yx4OLnimAmYjNu1+u2JWPrqpxw==}
     dependencies:
       testcontainers: 9.12.0
     transitivePeerDependencies:
