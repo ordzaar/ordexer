@@ -28,7 +28,7 @@
     "@ordzaar/ordexer-db": "workspace:*",
     "@ordzaar/ord-service": "workspace:*",
     "@ordzaar/http-json-rpc": "workspace:*",
-    "@ordzaar/standard-api-fastify": "^0.4.11",
+    "@ordzaar/standard-api-fastify": "^0.4.15",
     "@prisma/client": "^5.7.1",
     "@types/uuid": "^9.0.7",
     "axios": "^1.6.3",
@@ -49,8 +49,8 @@
     "uuid": "^9.0.1"
   },
   "devDependencies": {
-    "@ordzaar/standard-prettier": "^0.4.11",
-    "@ordzaar/standard-typescript": "^0.4.11",
+    "@ordzaar/standard-prettier": "^0.4.15",
+    "@ordzaar/standard-typescript": "^0.4.15",
     "@types/express": "^4.17.21",
     "@types/multer": "^1.4.11",
     "@types/node": "^20.10.0",
