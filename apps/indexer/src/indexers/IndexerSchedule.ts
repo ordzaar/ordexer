@@ -35,7 +35,7 @@ export class IndexerTask {
   async checkForBlock() {
     if (this.indexing) return;
     this.indexing = true;
-    this.logger.log("[INDEXER_SCHEDULE] check for block");
+    this.logger.log("[INDEXER_SCHEDULE] check for new block");
 
     let indexerBlockHeight = -1;
     const indexerRow = await this.prisma.indexer.findUnique({
@@ -85,5 +85,6 @@ export class IndexerTask {
     };
     const fromBlockHeight = indexerBlockHeight + 1;
     await this.indexerService.indexBlock(fromBlockHeight, targetBlockHeight, indexOptions);
+    this.indexing = false;
   }
 }
