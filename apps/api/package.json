@@ -31,7 +31,7 @@
     "@ordzaar/standard-api-fastify": "^0.4.11",
     "@prisma/client": "^5.7.1",
     "@types/uuid": "^9.0.7",
-    "axios": "^1.6.3",
+    "axios": "^1.6.5",
     "bignumber.js": "^9.1.2",
     "bitcoin-address-validation": "^2.2.3",
     "bitcoinjs-lib": "^6.1.5",
