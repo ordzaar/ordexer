@@ -5,6 +5,7 @@ import { AxiosResponse } from "axios";
 import { networks } from "bitcoinjs-lib";
 
 import { OrdError } from "../errors/OrdError";
+import { Rarity } from "../utils/Rarity";
 
 @Injectable()
 export class OrdProvider {
@@ -94,6 +95,10 @@ export class OrdProvider {
   async getInscriptionsForIds(ids: string[]): Promise<OrdInscription[]> {
     return this.call<OrdInscription[]>(`/inscriptions?`, { ids });
   }
+
+  async getOrdinals(outpoint: string): Promise<Ordinal[]> {
+    return this.call<Ordinal[]>(`/ordinals/${outpoint}`);
+  }
 }
 
 export type DetailedInscription = {
@@ -125,4 +130,21 @@ export type OrdInscription = {
   sat: number;
   satpoint: string;
   timestamp: number;
+};
+
+export type Ordinal = {
+  number: number;
+  decimal: string;
+  degree: string;
+  name: string;
+  height: number;
+  cycle: number;
+  epoch: number;
+  period: number;
+  offset: number;
+  rarity: Rarity;
+  output: string;
+  start: number;
+  end: number;
+  size: number;
 };
