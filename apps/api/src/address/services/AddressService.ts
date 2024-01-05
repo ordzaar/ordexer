@@ -61,7 +61,7 @@ export class AddressService {
 
   async getSpendables({ address, value, safetospend = true, filter = [] }: GetSpendablesDTO): Promise<SpendableDTO[]> {
     const spendables: SpendableDTO[] = [];
-    let totalValue = 0;
+    const valuesArray: number[] = [];
 
     const outputs = await this.prisma.output.findMany({
       where: {
@@ -105,7 +105,7 @@ export class AddressService {
           }
         }
 
-        totalValue += output.value;
+        valuesArray.push(output.value);
 
         const spendable = {
           txid: output.voutTxid,
@@ -119,6 +119,8 @@ export class AddressService {
     });
 
     await outputPromiseLimiter.run();
+
+    const totalValue = valuesArray.reduce((a, b) => a + b, 0);
 
     if (totalValue < value) {
       throw new Error("Insufficient funds");
