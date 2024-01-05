@@ -92,6 +92,9 @@ importers:
       joi:
         specifier: ^17.11.0
         version: 17.11.0
+      p-limit:
+        specifier: ^3.1.0
+        version: 3.1.0
       pg:
         specifier: ^8.11.3
         version: 8.11.3
@@ -310,6 +313,9 @@ importers:
       '@ordzaar/standard-api-fastify':
         specifier: ^0.4.11
         version: 0.4.11(@prisma/client@5.7.1)(axios@1.6.3)(class-transformer@0.5.1)(class-validator@0.14.0)(encoding@0.1.13)(pino-http@8.5.1)(reflect-metadata@0.1.13)(rxjs@7.8.1)(typescript@5.2.2)
+      big.js:
+        specifier: ^6.2.1
+        version: 6.2.1
       bitcoinjs-lib:
         specifier: ^6.1.5
         version: 6.1.5
