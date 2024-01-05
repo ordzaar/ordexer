@@ -1,6 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { btcToSat } from "@ordzaar/bitcoin-service";
+import { BitcoinService, btcToSat, parseLocation } from "@ordzaar/bitcoin-service";
 import { OrdProvider } from "@ordzaar/ord-service";
 import { Inscription } from "@prisma/client";
 
@@ -14,6 +14,7 @@ export class OrdinalsService {
   constructor(
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
+    private readonly rpc: BitcoinService,
     private readonly ord: OrdProvider,
   ) {
     this.logger = new Logger(OrdinalsService.name);
@@ -27,6 +28,69 @@ export class OrdinalsService {
   async getInscriptionUTXO(id: string): Promise<any> {
     this.logger.log(`getInscriptionUTXO(${id})`);
     return {};
+  }
+
+  async getInscriptionUTXOHelper(id: string, attempts: number): Promise<any> {
+    this.logger.log(`getInscriptionUTXO(${id})`);
+    const inscription = await this.prisma.inscription.findUnique({
+      where: {
+        inscriptionId: id,
+      },
+    });
+
+    if (!inscription) {
+      return {};
+    }
+
+    const [txid, n] = parseLocation(inscription.outpoint);
+
+    const output = await this.prisma.output.findUnique({
+      where: {
+        voutTxid_voutTxIndex: {
+          voutTxid: txid,
+          voutTxIndex: n,
+        },
+      },
+    });
+
+    if (output?.vinTxid !== null && output?.vinTxIndex !== null) {
+      const data = await this.ord.getInscription(id);
+      if (data === undefined || attempts > 3) {
+        throw new Error("Unable to resolve utxo from inscription state");
+      }
+      const [inscriptionTxid, inscriptionN] = data.satpoint.split(":");
+      await this.prisma.inscription.update({
+        where: {
+          inscriptionId: id,
+        },
+        data: {
+          owner: data.address,
+          outpoint: `${inscriptionTxid}:${inscriptionN}`,
+        },
+      });
+      return this.getInscriptionUTXOHelper(id, attempts + 1);
+    }
+
+    const tx = await this.rpc.getRawTransaction(txid, true);
+    if (tx === undefined) {
+      throw new Error("Blockchain transaction not found");
+    }
+
+    const vout = tx.vout[n];
+    if (vout === undefined) {
+      throw new Error("Blockchain vout not found");
+    }
+
+    const height = await this.rpc.getBlockCount();
+
+    return {
+      txid,
+      n,
+      sats: btcToSat(vout.value),
+      scriptPubKey: vout.scriptPubKey,
+      safeToSpend: false,
+      confirmations: height - output.voutBlockHeight + 1,
+    };
   }
 
   async getInscriptions({
