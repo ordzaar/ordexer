@@ -126,3 +126,20 @@ export type OrdInscription = {
   satpoint: string;
   timestamp: number;
 };
+
+export type Ordinal = {
+  number: number;
+  decimal: string;
+  degree: string;
+  name: string;
+  height: number;
+  cycle: number;
+  epoch: number;
+  period: number;
+  offset: number;
+  rarity: Rarity;
+  output: string;
+  start: number;
+  end: number;
+  size: number;
+};
