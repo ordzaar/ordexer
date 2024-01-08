@@ -23,7 +23,7 @@
   "prettier": "@ordzaar/standard-prettier",
   "dependencies": {
     "@ordzaar/standard-api-fastify": "^0.4.11",
-    "axios": "^1.6.3",
+    "axios": "^1.6.5",
     "p-limit": "^3.1.0"
   },
   "devDependencies": {
