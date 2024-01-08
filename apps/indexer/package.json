@@ -27,6 +27,7 @@
     "@nestjs/schedule": "^4.0.0",
     "@ordzaar/bitcoin-service": "workspace:*",
     "@ordzaar/ordexer-db": "workspace:*",
+    "@ordzaar/ordexer-utils": "workspace:*",
     "@ordzaar/ord-service": "workspace:*",
     "@ordzaar/standard-api-fastify": "^0.4.11",
     "@prisma/client": "^5.7.1",
