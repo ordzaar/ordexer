@@ -5,6 +5,7 @@ import { AxiosResponse } from "axios";
 import { networks } from "bitcoinjs-lib";
 
 import { OrdError } from "../errors/OrdError";
+import { Rarity } from "../utils/Rarity";
 
 @Injectable()
 export class OrdProvider {
