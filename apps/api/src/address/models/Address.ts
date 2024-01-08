@@ -1,9 +1,17 @@
 import { ScriptPubKey } from "@ordzaar/bitcoin-service";
 import { Rarity } from "@ordzaar/ord-service";
-import { Type } from "class-transformer";
-import { IsBoolean, IsNotEmpty, IsNumber, IsObject, IsOptional, IsString, ValidateNested } from "class-validator";
+import { Transform, Type } from "class-transformer";
+import { IsBoolean, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, Validate } from "class-validator";
+import { PaginationQuery } from "src/libs/pagination/ApiQuery";
+import { ArrayStringTransformer, BooleanStringTransformer } from "src/pipes/transformers";
+import { IsValidRarities } from "src/validators/IsValidRarities";
 
-export class GetBalanceDTO {
+export enum SpentOrder {
+  VALUE_ASCENDING = "VALUE_ASCENDING",
+  VALUE_DESCENDING = "VALUE_DESCENDING",
+}
+
+export class AddressParamDTO {
   @IsString()
   @IsNotEmpty()
   address: string;
@@ -13,27 +21,31 @@ export class GetBalanceDTO {
   }
 }
 
-export class GetSpendablesDTO {
-  @IsString()
-  @IsNotEmpty()
-  address: string;
-
+export class GetSpendablesQueryDTO extends PaginationQuery {
   @IsNumber()
   @IsNotEmpty()
+  @Type(() => Number)
   value: number;
 
   @IsBoolean()
   @IsOptional()
+  @Type(() => String)
+  @Transform(BooleanStringTransformer)
   safetospend?: boolean;
 
   @IsString({ each: true })
   @IsOptional()
+  @Type(() => String)
+  @Transform(ArrayStringTransformer)
   filter?: string[];
 
-  // TODO: Pagination
+  @IsOptional()
+  @IsEnum(SpentOrder)
+  orderBy?: SpentOrder;
 
-  constructor(address: string, value: number, safetospend?: boolean, filter?: string[]) {
-    this.address = address;
+  constructor(value: number, safetospend?: boolean, filter?: string[]) {
+    super();
+
     this.value = value;
     this.safetospend = safetospend;
     this.filter = filter;
@@ -47,41 +59,30 @@ export type SpendableDTO = {
   scriptPubKey: ScriptPubKey;
 };
 
-export class GetUnspentsOptionsDTO {
-  @IsString()
+export class GetUnspentsQueryDTO extends PaginationQuery {
+  @IsString({ each: true })
   @IsOptional()
+  @Type(() => String)
+  @Transform(ArrayStringTransformer)
+  @Validate(IsValidRarities)
   allowedRarity?: Rarity[];
 
   @IsBoolean()
   @IsOptional()
+  @Type(() => String)
+  @Transform(BooleanStringTransformer)
   safetospend?: boolean;
 
-  // TODO: Pagination
+  @IsOptional()
+  @IsEnum(SpentOrder)
+  orderBy?: SpentOrder;
 
-  constructor(allowedRarity?: Rarity[], safetospend?: boolean) {
+  constructor(allowedRarity?: Rarity[], safetospend?: boolean, orderBy?: SpentOrder) {
+    super();
+
     this.allowedRarity = allowedRarity;
     this.safetospend = safetospend;
-  }
-}
-
-export class GetUnspentsDTO {
-  @IsString()
-  @IsNotEmpty()
-  address: string;
-
-  @IsObject()
-  @ValidateNested()
-  @IsOptional()
-  @Type(() => GetUnspentsOptionsDTO)
-  options?: GetUnspentsOptionsDTO;
-
-  @IsOptional()
-  sort?: "asc" | "desc";
-
-  constructor(address: string, options?: { allowedRarity?: Rarity[]; safetospend?: boolean }, sort?: "asc" | "desc") {
-    this.address = address;
-    this.options = options;
-    this.sort = sort;
+    this.orderBy = orderBy;
   }
 }
 

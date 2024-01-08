@@ -1,9 +1,10 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { BitcoinService } from "@ordzaar/bitcoin-service";
 import { getSafeToSpendState, OrdProvider } from "@ordzaar/ord-service";
+import { Prisma } from "@prisma/client";
 
 import { PrismaService } from "../../PrismaService";
-import { GetBalanceDTO, GetSpendablesDTO, GetUnspentsDTO, SpendableDTO, UnspentDTO } from "../models/Address";
+import { GetSpendablesQueryDTO, GetUnspentsQueryDTO, SpendableDTO, SpentOrder, UnspentDTO } from "../models/Address";
 
 @Injectable()
 export class AddressService {
@@ -17,7 +18,7 @@ export class AddressService {
     this.logger = new Logger(AddressService.name);
   }
 
-  async getBalance({ address }: GetBalanceDTO): Promise<number> {
+  async getBalance(address: string): Promise<number> {
     const outputs = await this.prisma.output.findMany({
       where: {
         addresses: {
@@ -56,9 +57,14 @@ export class AddressService {
     return balance;
   }
 
-  async getSpendables({ address, value, safetospend = true, filter = [] }: GetSpendablesDTO): Promise<SpendableDTO[]> {
+  async getSpendables(
+    address: string,
+    { value, safetospend = true, filter = [], orderBy, next, size }: GetSpendablesQueryDTO,
+  ): Promise<SpendableDTO[]> {
     const spendables: SpendableDTO[] = [];
     let totalValue = 0;
+
+    const spentListOrder = this.getSpentListOrderBy(orderBy);
 
     const outputs = await this.prisma.output.findMany({
       where: {
@@ -77,9 +83,9 @@ export class AddressService {
       include: {
         inscriptions: true,
       },
-      orderBy: {
-        value: "desc",
-      },
+      orderBy: [spentListOrder],
+      cursor: next ? { id: next } : undefined,
+      take: size + 1, // to get extra 1 to check for next page
     });
 
     outputs.forEach(async (output) => {
@@ -116,9 +122,14 @@ export class AddressService {
     return spendables;
   }
 
-  async getUnspents({ address, options = {}, sort = "desc" }: GetUnspentsDTO): Promise<UnspentDTO[]> {
+  async getUnspents(
+    address: string,
+    { allowedRarity, safetospend, orderBy, next, size }: GetUnspentsQueryDTO,
+  ): Promise<UnspentDTO[]> {
     const height = await this.rpc.getBlockCount();
     const unspents: UnspentDTO[] = [];
+
+    const spentListOrder = this.getSpentListOrderBy(orderBy);
 
     const outputs = await this.prisma.output.findMany({
       where: {
@@ -134,9 +145,9 @@ export class AddressService {
       include: {
         inscriptions: true,
       },
-      orderBy: {
-        value: sort,
-      },
+      orderBy: [spentListOrder],
+      cursor: next ? { id: next } : undefined,
+      take: size + 1, // to get extra 1 to check for next page
     });
 
     outputs.forEach(async (output) => {
@@ -154,10 +165,10 @@ export class AddressService {
 
       unspent.ordinals = ordinals;
       unspent.inscriptions = inscriptions;
-      unspent.safeToSpend = await getSafeToSpendState(ordinals, options.allowedRarity);
+      unspent.safeToSpend = await getSafeToSpendState(ordinals, allowedRarity);
       unspent.confirmations = height - output.voutBlockHeight + 1;
 
-      if (options.safetospend && !unspent.safeToSpend) {
+      if (safetospend && !unspent.safeToSpend) {
         return;
       }
 
@@ -165,5 +176,13 @@ export class AddressService {
     });
 
     return unspents;
+  }
+
+  private getSpentListOrderBy(orderBy?: SpentOrder): Prisma.OutputOrderByWithRelationInput {
+    const spentOrderByConfig: Record<SpentOrder, Prisma.OutputOrderByWithRelationInput> = {
+      [SpentOrder.VALUE_ASCENDING]: { value: Prisma.SortOrder.asc },
+      [SpentOrder.VALUE_DESCENDING]: { value: Prisma.SortOrder.desc },
+    };
+    return orderBy === undefined ? spentOrderByConfig[SpentOrder.VALUE_DESCENDING] : spentOrderByConfig[orderBy];
   }
 }
