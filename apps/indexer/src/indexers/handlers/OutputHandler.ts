@@ -1,10 +1,10 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { ScriptPubKey } from "@ordzaar/bitcoin-service";
+import { promiseLimiter } from "@ordzaar/ordexer-utils";
 import { Prisma, PrismaClient, PrismaPromise } from "@prisma/client";
 import { ITXClientDenyList, Omit } from "@prisma/client/runtime/library";
 import { perf } from "src/utils/Log";
-import { promiseLimiter } from "src/utils/Promise";
 
 import { VinData, VoutData } from "../types";
 import { BaseIndexerHandler } from "./BaseHandler";

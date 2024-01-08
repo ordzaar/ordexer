@@ -5,6 +5,7 @@ import { AxiosResponse } from "axios";
 import { networks } from "bitcoinjs-lib";
 
 import { OrdError } from "../errors/OrdError";
+import { Rarity } from "../utils/Rarity";
 
 @Injectable()
 export class OrdProvider {
@@ -125,4 +126,21 @@ export type OrdInscription = {
   sat: number;
   satpoint: string;
   timestamp: number;
+};
+
+export type Ordinal = {
+  number: number;
+  decimal: string;
+  degree: string;
+  name: string;
+  height: number;
+  cycle: number;
+  epoch: number;
+  period: number;
+  offset: number;
+  rarity: Rarity;
+  output: string;
+  start: number;
+  end: number;
+  size: number;
 };

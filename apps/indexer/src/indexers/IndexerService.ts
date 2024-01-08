@@ -1,8 +1,8 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { BitcoinService, Block, isCoinbaseTx } from "@ordzaar/bitcoin-service";
+import { promiseLimiter } from "@ordzaar/ordexer-utils";
 import { perf } from "src/utils/Log";
-import { promiseLimiter } from "src/utils/Promise";
 
 import { PrismaService } from "../PrismaService";
 import { BaseIndexerHandler } from "./handlers/BaseHandler";
