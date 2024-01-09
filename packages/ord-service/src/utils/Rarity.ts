@@ -2,6 +2,8 @@ import { Ordinal } from "src/providers/OrdProvider";
 
 export const rarity = ["common", "uncommon", "rare", "epic", "legendary", "mythic"];
 
+export const rarityMap = new Map(rarity.map((v) => [v, true]));
+
 export type Rarity = (typeof rarity)[number];
 
 export async function getSafeToSpendState(

@@ -6,6 +6,16 @@ export const DATABASE_URL = "DATABASE_URL";
 export function appConfig() {
   return {
     dbUrl: process.env.DATABASE_URL,
+    bitcoinRpc: {
+      uri: process.env.BITCOIN_RPC_URI,
+      port: process.env.BITCOIN_RPC_PORT,
+      user: process.env.BITCOIN_RPC_USER,
+      password: process.env.BITCOIN_RPC_PASSWORD,
+    },
+    ord: {
+      uri: process.env.ORD_URI,
+      port: process.env.ORD_PORT,
+    },
     api: {
       addresses: {
         outputPromiseLimiter: parseInt(process.env.OUTPUT_PROMISE_LIMITER ?? "1", 10),
@@ -23,5 +33,11 @@ export type AppConfig = DeepPartial<ReturnType<typeof appConfig>>;
 
 export const ENV_VALIDATION_SCHEMA = Joi.object({
   DATABASE_URL: Joi.string(),
+  BITCOIN_RPC_URI: Joi.string(),
+  BITCOIN_RPC_PORT: Joi.number(),
+  BITCOIN_RPC_USER: Joi.string(),
+  BITCOIN_RPC_PASSWORD: Joi.string(),
+  ORD_URI: Joi.string(),
+  ORD_PORT: Joi.number(),
   OUTPUT_PROMISE_LIMITER: Joi.number(),
 });

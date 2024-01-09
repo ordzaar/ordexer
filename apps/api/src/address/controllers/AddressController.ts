@@ -1,27 +1,36 @@
-import { Body, Controller, Post } from "@nestjs/common";
+import { Controller, Get, Param, Query, UsePipes, ValidationPipe } from "@nestjs/common";
 
-import { GetBalanceDTO, GetSpendablesDTO, GetUnspentsDTO } from "../models/Address";
+import { AddressParamDTO, GetSpendablesQueryDTO, GetUnspentsQueryDTO } from "../models/Address";
 import { AddressService } from "../services/AddressService";
 
-@Controller("address")
+@Controller("addresses")
 export class AddressController {
   constructor(private addressService: AddressService) {}
 
-  @Post("getBalance/")
-  async getBalance(@Body() getBalanceOptions: GetBalanceDTO) {
-    const balance = await this.addressService.getBalance(getBalanceOptions);
+  @Get(":address/balance")
+  async getBalance(@Param() params: AddressParamDTO) {
+    const balance = await this.addressService.getBalance(params.address);
     return { balance };
   }
 
-  @Post("getSpendables/")
-  async getSpendables(@Body() getSpendablesOptions: GetSpendablesDTO) {
-    const spendables = await this.addressService.getSpendables(getSpendablesOptions);
-    return { spendables };
+  @Get(":address/spendables")
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async getSpendables(
+    @Param()
+    params: AddressParamDTO,
+    @Query()
+    query: GetSpendablesQueryDTO,
+  ) {
+    const spendables = await this.addressService.getSpendables(params.address, query);
+    return {
+      data: spendables,
+    };
   }
 
-  @Post("getUnspents/")
-  async getUnspents(@Body() getUnspentsOptions: GetUnspentsDTO) {
-    const unspents = await this.addressService.getUnspents(getUnspentsOptions);
-    return { unspents };
+  @Get(":address/unspents")
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async getUnspents(@Param() params: AddressParamDTO, @Query() query: GetUnspentsQueryDTO) {
+    const unspents = await this.addressService.getUnspents(params.address, query);
+    return unspents;
   }
 }

@@ -25,7 +25,6 @@
     "@logtail/pino": "^0.4.17",
     "@nestjs/axios": "^3.0.1",
     "@ordzaar/bitcoin-service": "workspace:*",
-    "@ordzaar/http-json-rpc": "workspace:*",
     "@ordzaar/ord-service": "workspace:*",
     "@ordzaar/ordexer-db": "workspace:*",
     "@ordzaar/standard-api-fastify": "^0.4.11",
