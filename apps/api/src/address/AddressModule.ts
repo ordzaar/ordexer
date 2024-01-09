@@ -4,13 +4,12 @@ import { OrdModule } from "@ordzaar/ord-service";
 
 import { PrismaModule } from "../PrismaModule";
 import { AddressController } from "./controllers/AddressController";
-import { AddressRpcHandler } from "./controllers/AddressRpcHandler";
 import { AddressService } from "./services/AddressService";
 
 @Module({
   imports: [PrismaModule, BitcoinModule, OrdModule],
-  providers: [AddressService, AddressRpcHandler],
+  providers: [AddressService],
   controllers: [AddressController],
-  exports: [AddressRpcHandler],
+  exports: [],
 })
 export class AddressModule {}

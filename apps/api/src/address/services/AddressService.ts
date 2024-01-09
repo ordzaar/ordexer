@@ -2,10 +2,12 @@ import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { BitcoinService } from "@ordzaar/bitcoin-service";
 import { getSafeToSpendState, OrdProvider } from "@ordzaar/ord-service";
+import { Prisma } from "@prisma/client";
+import { ApiPagedResponse } from "src/libs/pagination/ApiPagedResponse";
 
 import { PrismaService } from "../../PrismaService";
 import { promiseLimiter } from "../../utils/Promise";
-import { GetBalanceDTO, GetSpendablesDTO, GetUnspentsDTO, SpendableDTO, UnspentDTO } from "../models/Address";
+import { GetSpendablesQueryDTO, GetUnspentsQueryDTO, SpendableDTO, SpentOrder, UnspentDTO } from "../models/Address";
 
 @Injectable()
 export class AddressService {
@@ -20,7 +22,7 @@ export class AddressService {
     this.logger = new Logger(AddressService.name);
   }
 
-  async getBalance({ address }: GetBalanceDTO): Promise<number> {
+  async getBalance(address: string): Promise<number> {
     const outputs = await this.prisma.output.findMany({
       where: {
         addresses: {
@@ -34,8 +36,12 @@ export class AddressService {
       },
     });
 
-    const outputValues = await Promise.all(
-      outputs.map(async (output) => {
+    const outputPromiseLimiter = promiseLimiter<number>(
+      this.configService.getOrThrow<number>("api.addresses.outputPromiseLimiter"),
+    );
+
+    outputs.forEach((output) => {
+      outputPromiseLimiter.push(async () => {
         if (!output.value) {
           // We should not end up here
           // If we end up in this block, it means that the output is not indexed correctly
@@ -51,15 +57,19 @@ export class AddressService {
           return vout.value;
         }
         return output.value;
-      }),
-    );
+      });
+    });
 
+    const outputValues = await outputPromiseLimiter.run();
     const balance = outputValues.reduce((a, b) => a + b, 0);
 
     return balance;
   }
 
-  async getSpendables({ address, value, safetospend = true, filter = [] }: GetSpendablesDTO): Promise<SpendableDTO[]> {
+  async getSpendables(
+    address: string,
+    { value, safetospend = true, filter = [] }: GetSpendablesQueryDTO,
+  ): Promise<SpendableDTO[]> {
     const spendables: SpendableDTO[] = [];
     const valuesArray: number[] = [];
 
@@ -80,16 +90,13 @@ export class AddressService {
       include: {
         inscriptions: true,
       },
-      orderBy: {
-        value: "desc",
-      },
     });
 
     const outputPromiseLimiter = promiseLimiter(
       this.configService.getOrThrow<number>("api.addresses.outputPromiseLimiter"),
     );
 
-    outputs.forEach(async (output) => {
+    outputs.forEach((output) => {
       outputPromiseLimiter.push(async () => {
         const outpoint = `${output.voutTxid}:${output.voutTxIndex}`;
 
@@ -108,6 +115,7 @@ export class AddressService {
         valuesArray.push(output.value);
 
         const spendable = {
+          id: output.id,
           txid: output.voutTxid,
           n: output.voutTxIndex,
           sats: output.value,
@@ -129,8 +137,11 @@ export class AddressService {
     return spendables;
   }
 
-  async getUnspents({ address, options = {}, sort = "desc" }: GetUnspentsDTO): Promise<UnspentDTO[]> {
-    const unspents: UnspentDTO[] = [];
+  async getUnspents(
+    address: string,
+    { allowedRarity, safetospend, orderBy, next, size }: GetUnspentsQueryDTO,
+  ): Promise<ApiPagedResponse<UnspentDTO>> {
+    const spentListOrder = this.getSpentListOrderBy(orderBy);
 
     const [height, outputs] = await Promise.all([
       this.rpc.getBlockCount(),
@@ -148,37 +159,53 @@ export class AddressService {
         include: {
           inscriptions: true,
         },
-        orderBy: {
-          value: sort,
-        },
+        orderBy: [spentListOrder],
+        cursor: next ? { id: next } : undefined,
+        take: size + 1, // to get extra 1 to check for next page
       }),
     ]);
 
-    outputs.forEach(async (output) => {
-      const outpoint = `${output.voutTxid}:${output.voutTxIndex}`;
+    const outputPromiseLimiter = promiseLimiter<UnspentDTO | null>(
+      this.configService.getOrThrow<number>("api.addresses.outputPromiseLimiter"),
+    );
 
-      const unspent = {
-        txid: output.voutTxid,
-        n: output.voutTxIndex,
-        sats: output.value,
-        scriptPubKey: output.scriptPubKey,
-      } as UnspentDTO;
+    outputs.forEach((output) => {
+      outputPromiseLimiter.push(async () => {
+        const unspent = {
+          id: output.id,
+          txid: output.voutTxid,
+          n: output.voutTxIndex,
+          sats: output.value,
+          scriptPubKey: output.scriptPubKey,
+        } as UnspentDTO;
 
-      const ordinals = await this.ord.getOrdinals(outpoint);
-      const { inscriptions } = output;
+        const { inscriptions } = output;
 
-      unspent.ordinals = ordinals;
-      unspent.inscriptions = inscriptions;
-      unspent.safeToSpend = await getSafeToSpendState(ordinals, options.allowedRarity);
-      unspent.confirmations = height - output.voutBlockHeight + 1;
+        const outpoint = `${output.voutTxid}:${output.voutTxIndex}`;
+        const ordinals = await this.ord.getOrdinals(outpoint);
+        unspent.ordinals = ordinals;
+        unspent.safeToSpend = await getSafeToSpendState(ordinals, allowedRarity);
+        unspent.inscriptions = inscriptions;
+        unspent.confirmations = height - output.voutBlockHeight + 1;
 
-      if (options.safetospend && !unspent.safeToSpend) {
-        return;
-      }
+        if (safetospend && !unspent.safeToSpend) {
+          return null;
+        }
 
-      unspents.push(unspent);
+        return unspent;
+      });
     });
 
-    return unspents;
+    const unspents = (await outputPromiseLimiter.run()).filter((v) => v !== null) as UnspentDTO[];
+
+    return ApiPagedResponse.of(unspents, size, (unspent) => unspent.id);
+  }
+
+  private getSpentListOrderBy(orderBy?: SpentOrder): Prisma.OutputOrderByWithRelationInput {
+    const spentOrderByConfig: Record<SpentOrder, Prisma.OutputOrderByWithRelationInput> = {
+      [SpentOrder.SATS_ASCENDING]: { value: Prisma.SortOrder.asc },
+      [SpentOrder.SATS_DESCENDING]: { value: Prisma.SortOrder.desc },
+    };
+    return orderBy === undefined ? spentOrderByConfig[SpentOrder.SATS_DESCENDING] : spentOrderByConfig[orderBy];
   }
 }
